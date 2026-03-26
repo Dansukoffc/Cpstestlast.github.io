@@ -3,1003 +3,361 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>КПС Тестер PRO - прецизионная аналитика</title>
+    <title>cpstestlastgd</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            user-select: none;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
         :root {
-            --bg-gradient-start: #1a1e2c;
-            --bg-gradient-end: #0f1219;
-            --container-bg: rgba(22, 26, 35, 0.85);
-            --card-bg: rgba(15, 18, 28, 0.9);
-            --text-primary: #eef4ff;
-            --text-secondary: #9aa9c2;
-            --border-color: rgba(255,255,255,0.12);
-            --accent-color: #3b4bff;
-            --accent-glow: rgba(59,75,255,0.5);
-            --graph-bg: #03060c;
-            --graph-grid: #2a3448;
-            --left-hand-color: #ff884d;
-            --right-hand-color: #4dffb5;
-            --one-hand-color: #4c9aff;
-            --advice-bg: rgba(0,0,0,0.6);
-            --input-bg: #0f131f;
-            --input-border: #3a4466;
-            --countdown-bg: rgba(0,0,0,0.85);
-            --bad-color: #ff6b6b;
-            --warning-color: #ffb347;
-            --good-color: #6bff8f;
-            --info-color: #5dade2;
-            --excellent-color: #2ecc71;
-        }
-
-        body.light {
-            --bg-gradient-start: #eef2f8;
-            --bg-gradient-end: #dce3ec;
-            --container-bg: rgba(255, 255, 255, 0.95);
-            --card-bg: rgba(255, 255, 255, 0.95);
-            --text-primary: #1a2c3e;
-            --text-secondary: #4a627a;
-            --border-color: rgba(0,0,0,0.15);
-            --accent-color: #3b4bff;
-            --accent-glow: rgba(59,75,255,0.3);
-            --graph-bg: #ffffff;
-            --graph-grid: #e2e8f0;
-            --left-hand-color: #e67e22;
-            --right-hand-color: #27ae60;
-            --one-hand-color: #2980b9;
-            --advice-bg: rgba(0,0,0,0.05);
-            --input-bg: #ffffff;
-            --input-border: #cbd5e1;
-            --countdown-bg: rgba(0,0,0,0.7);
-            --bad-color: #e74c3c;
-            --warning-color: #f39c12;
-            --good-color: #2ecc71;
-            --info-color: #3498db;
-            --excellent-color: #27ae60;
+            --bg-dark: #010102;
+            --container-bg: rgba(5, 7, 12, 0.95);
+            --card-bg: rgba(15, 18, 25, 0.98);
+            --text-primary: #ffffff;
+            --text-secondary: #667085;
+            --accent: #00ffff;
+            --left-hand: #ff3333;
+            --right-hand: #33ff77;
+            --error: #ff0055;
         }
 
         body {
-            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
-            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            transition: background 0.3s ease;
+            background: var(--bg-dark);
+            font-family: 'Consolas', 'Monaco', monospace;
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
         }
+
+        #three-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.6; }
 
         .app-container {
-            max-width: 1300px;
-            width: 100%;
-            background: var(--container-bg);
-            backdrop-filter: blur(8px);
-            border-radius: 1.8rem;
-            padding: 1.2rem;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            border: 1px solid var(--border-color);
+            position: relative; z-index: 1; max-width: 1200px; width: 98%; margin: 10px auto;
+            background: var(--container-bg); backdrop-filter: blur(20px); border-radius: 15px;
+            padding: 20px; border: 1px solid rgba(0, 255, 255, 0.1);
+            display: grid; grid-template-columns: 1fr 320px; gap: 15px;
         }
 
-        .control-bar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.7rem;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.2rem;
-            background: var(--card-bg);
-            padding: 0.7rem 1rem;
-            border-radius: 1.2rem;
-        }
+        .main-col { display: flex; flex-direction: column; gap: 10px; }
 
-        .mode-group {
-            display: flex;
-            gap: 0.4rem;
-            background: var(--input-bg);
-            padding: 0.2rem;
-            border-radius: 1.8rem;
-        }
+        .header { display: flex; justify-content: space-between; align-items: center; background: #000; padding: 10px; border-radius: 8px; border: 1px solid #222; }
+        .mode-btn { background: #111; border: 1px solid #333; color: #555; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
+        .mode-btn.active { background: var(--accent); color: #000; font-weight: bold; border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
 
-        .mode-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            padding: 0.4rem 0.9rem;
-            border-radius: 1.5rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.85rem;
-        }
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .stat-card { background: var(--card-bg); padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #222; }
+        .stat-val { font-size: 1.8rem; font-weight: 900; display: block; color: var(--accent); }
+        .stat-lbl { font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; }
 
-        .mode-btn.active {
-            background: var(--accent-color);
-            color: white;
-            box-shadow: 0 2px 8px var(--accent-glow);
-        }
+        .graph-wrap { background: #000; border-radius: 10px; position: relative; border: 2px solid #111; height: 320px; overflow: hidden; }
+        #clickChart { width: 100%; height: 100%; }
 
-        .timer-select, .theme-select, .countdown-select {
-            background: var(--input-bg);
-            border: 1px solid var(--input-border);
-            color: var(--text-primary);
-            padding: 0.4rem 0.7rem;
-            border-radius: 1.2rem;
-            font-weight: 500;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
+        .settings { background: var(--card-bg); padding: 15px; border-radius: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; border: 1px solid #222; }
+        .set-box { display: flex; flex-direction: column; gap: 4px; }
+        .k-btn { background: #000; border: 1px solid #444; color: var(--accent); padding: 8px; border-radius: 6px; text-align: center; cursor: pointer; font-weight: bold; }
+        .k-btn.waiting { border-color: var(--error); color: var(--error); animation: pulse 0.6s infinite; }
+        .inp { background: #000; border: 1px solid #333; color: #fff; padding: 6px; border-radius: 4px; width: 100%; outline: none; }
 
-        .settings-icon {
-            background: var(--input-bg);
-            border: 1px solid var(--input-border);
-            color: var(--text-primary);
-            font-size: 1.2rem;
-            padding: 0.3rem 0.8rem;
-            border-radius: 1.2rem;
-            cursor: pointer;
-        }
-
-        .stats-panel {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.7rem;
-            margin-bottom: 1rem;
-        }
-
-        .stat-card {
-            background: var(--card-bg);
-            border-radius: 1rem;
-            padding: 0.5rem;
-            text-align: center;
-            border: 1px solid var(--border-color);
-        }
-
-        .stat-label {
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-secondary);
-        }
-
-        .stat-value {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: var(--text-primary);
-            line-height: 1.2;
-        }
-
-        .advice-box {
-            background: var(--advice-bg);
-            padding: 0.8rem 1rem;
-            border-radius: 1rem;
-            margin-bottom: 1rem;
-            font-size: 0.8rem;
-            color: var(--text-primary);
-            border-left: 3px solid var(--info-color);
-            transition: all 0.2s;
-            line-height: 1.5;
-        }
-
-        .advice-box.bad-advice {
-            border-left-color: var(--bad-color);
-            background: rgba(231, 76, 60, 0.15);
-        }
-
-        .advice-box.good-advice {
-            border-left-color: var(--good-color);
-            background: rgba(46, 204, 113, 0.1);
-        }
-
-        .advice-box.excellent-advice {
-            border-left-color: var(--excellent-color);
-            background: rgba(46, 204, 113, 0.2);
-            box-shadow: 0 0 10px rgba(46,204,113,0.3);
-        }
-
-        .graph-wrapper {
-            background: var(--graph-bg);
-            border-radius: 1rem;
-            padding: 0.5rem;
-            margin-bottom: 1rem;
-            border: 1px solid var(--border-color);
-        }
-
-        canvas {
-            width: 100%;
-            height: auto;
-            background: var(--graph-bg);
-            border-radius: 0.6rem;
-            display: block;
-        }
-
-        .key-config {
-            background: var(--card-bg);
-            border-radius: 1.2rem;
-            padding: 1rem;
-            margin-top: 0.8rem;
-            border: 1px solid var(--border-color);
-        }
-
-        .config-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 0.8rem;
-            margin-bottom: 0.8rem;
-        }
-
-        .config-card {
-            background: var(--input-bg);
-            padding: 0.7rem;
-            border-radius: 1rem;
-            border: 1px solid var(--input-border);
-        }
-
-        .config-card h5 {
-            margin: 0 0 0.6rem 0;
-            color: var(--accent-color);
-            font-size: 0.85rem;
-        }
-
-        .key-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .key-row span {
-            font-weight: bold;
-            color: var(--text-primary);
-            font-size: 0.75rem;
-            min-width: 70px;
-        }
-
-        .bind-input {
-            background: var(--input-bg);
-            border: 1px solid var(--input-border);
-            color: var(--text-primary);
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.7rem;
-            width: 100px;
-            text-align: center;
-            font-family: monospace;
-            font-size: 0.75rem;
-        }
-
-        .preset-group {
-            display: flex;
-            gap: 0.3rem;
-            flex-wrap: wrap;
-            margin-top: 0.3rem;
-        }
-
-        .preset-btn {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 0.2rem 0.6rem;
-            border-radius: 0.5rem;
-            font-size: 0.7rem;
-            cursor: pointer;
-            transition: 0.1s;
-        }
-
-        .preset-btn:hover {
-            background: var(--accent-color);
-            color: white;
-        }
-
-        button.small {
-            background: var(--accent-color);
-            border: none;
-            padding: 0.4rem 1rem;
-            border-radius: 0.8rem;
-            color: white;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 0.8rem;
-        }
-
-        .status-text {
-            font-weight: bold;
-            background: var(--advice-bg);
-            padding: 0.2rem 0.7rem;
-            border-radius: 1rem;
-            color: var(--text-primary);
-            font-size: 0.8rem;
-        }
+        /* Панель Жесткого Тренера */
+        .coach-panel { background: rgba(0, 0, 0, 0.8); border-radius: 10px; padding: 15px; display: flex; flex-direction: column; gap: 12px; border: 1px solid #333; height: 100%; overflow-y: auto; }
+        .coach-title { color: var(--error); font-weight: bold; font-size: 0.9rem; border-bottom: 2px solid var(--error); padding-bottom: 5px; }
+        .coach-msg { font-size: 0.85rem; line-height: 1.4; color: #ff8888; font-style: italic; }
         
-        .countdown-overlay {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: var(--countdown-bg);
-            color: var(--accent-color);
-            font-size: 5rem;
-            font-weight: bold;
-            padding: 1rem 2rem;
-            border-radius: 2rem;
-            z-index: 1000;
-            font-family: monospace;
-            backdrop-filter: blur(12px);
-            border: 2px solid var(--accent-color);
-            animation: pulse 0.5s ease;
-        }
-        
-        @keyframes pulse {
-            0% { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-        }
-        
-        @media (max-width: 780px) {
-            .stats-panel { grid-template-columns: repeat(2, 1fr); }
-            .app-container { padding: 0.8rem; }
-            .stat-value { font-size: 1.3rem; }
-            .countdown-overlay { font-size: 3rem; }
-        }
+        .raw-data { margin-top: 10px; font-size: 0.75rem; color: #888; border-top: 1px solid #222; padding-top: 10px; }
+        .raw-line { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .raw-line span:last-child { color: #fff; }
+
+        @keyframes pulse { 50% { opacity: 0.3; } }
+        .countdown { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; font-size: 10rem; font-weight: 900; z-index: 1000; color: var(--error); }
     </style>
 </head>
 <body>
+
+<canvas id="three-canvas"></canvas>
+
 <div class="app-container">
-    <div class="control-bar">
-        <div class="mode-group">
-            <button data-mode="one" class="mode-btn active">🖐️ 1 рука</button>
-            <button data-mode="two" class="mode-btn">✌️ 2 руки</button>
-        </div>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <select id="durationSelect" class="timer-select">
-                <option value="5">5 сек</option>
-                <option value="10" selected>10 сек</option>
-                <option value="15">15 сек</option>
-                <option value="0">∞ Бесконечный</option>
-            </select>
-            <select id="countdownSelect" class="countdown-select">
-                <option value="1">Отсчет 1с</option>
-                <option value="3" selected>Отсчет 3с</option>
-            </select>
-            <select id="themeSelect" class="theme-select">
-                <option value="dark">🌙 Тёмная</option>
-                <option value="light">☀️ Светлая</option>
+    <div class="main-col">
+        <div class="header">
+            <div style="display: flex; gap: 5px;">
+                <button class="mode-btn active" id="mNormal">NORMAL</button>
+                <button class="mode-btn" id="mLine">RHYTHM</button>
+            </div>
+            <div style="display: flex; gap: 5px;">
+                <button class="mode-btn active" id="hOne">1 HAND</button>
+                <button class="mode-btn" id="hTwo">2 HANDS</button>
+            </div>
+            <select id="durSel" class="mode-btn">
+                <option value="5">5s</option>
+                <option value="10" selected>10s</option>
+                <option value="30">30s</option>
+                <option value="0">∞</option>
             </select>
         </div>
-        <button id="openSettingsBtn" class="settings-icon">⚙️</button>
-        <div><span id="testStatus" class="status-text">⚪ Готов</span></div>
-    </div>
 
-    <div class="stats-panel">
-        <div class="stat-card"><div class="stat-label">CPS (текущий)</div><div id="cpsValue" class="stat-value">0.00</div></div>
-        <div class="stat-card"><div class="stat-label">Всего кликов</div><div id="totalClicks" class="stat-value">0</div></div>
-        <div class="stat-card"><div class="stat-label">Ср. длит. (мс)</div><div id="avgDuration" class="stat-value">0</div></div>
-        <div class="stat-card"><div class="stat-label">Лев./Прав.</div><div id="twoHandRatio" class="stat-value">-/-</div></div>
-    </div>
-
-    <div id="adviceContainer" class="advice-box">💡 Нажмите старт (F3) для начала теста</div>
-
-    <div class="graph-wrapper">
-        <canvas id="clickChart" width="900" height="200" style="width:100%; height:200px"></canvas>
-        <div style="font-size: 10px; text-align:center; margin-top: 4px; color: var(--text-secondary);">📈 Вертикальные линии = длительность нажатия | Цвет = рука</div>
-    </div>
-
-    <div id="settingsPanel" style="display: none;" class="key-config">
-        <div class="config-grid">
-            <div class="config-card">
-                <h5>🎮 Старт теста</h5>
-                <div class="key-row">
-                    <span>Кнопка старта:</span>
-                    <input type="text" id="startKeyBind" class="bind-input" placeholder="F3">
-                </div>
-                <div class="preset-group">
-                    <button class="preset-btn preset-start" data-value="F3">F3</button>
-                    <button class="preset-btn preset-start" data-value="Enter">Enter</button>
-                    <button class="preset-btn preset-start" data-value="Space">Пробел</button>
-                </div>
-            </div>
-            
-            <div class="config-card">
-                <h5>🖐️ 1 рука</h5>
-                <div class="key-row">
-                    <span>Кнопка клика:</span>
-                    <input type="text" id="oneHandKey" class="bind-input" placeholder="Пробел">
-                </div>
-                <div class="preset-group">
-                    <button class="preset-btn preset-one" data-value="Space">Пробел</button>
-                    <button class="preset-btn preset-one" data-value="ArrowUp">↑</button>
-                    <button class="preset-btn preset-one" data-value="ArrowDown">↓</button>
-                    <button class="preset-btn preset-one" data-value="ArrowLeft">←</button>
-                    <button class="preset-btn preset-one" data-value="ArrowRight">→</button>
-                    <button class="preset-btn preset-one" data-value="KeyW">W</button>
-                    <button class="preset-btn preset-one" data-value="KeyA">A</button>
-                    <button class="preset-btn preset-one" data-value="KeyS">S</button>
-                    <button class="preset-btn preset-one" data-value="KeyD">D</button>
-                </div>
-            </div>
-            
-            <div class="config-card">
-                <h5>✌️ 2 руки</h5>
-                <div class="key-row">
-                    <span>Левая рука:</span>
-                    <input type="text" id="leftKeyBind" class="bind-input" placeholder="←">
-                </div>
-                <div class="preset-group">
-                    <button class="preset-btn preset-left" data-value="ArrowLeft">←</button>
-                    <button class="preset-btn preset-left" data-value="KeyA">A</button>
-                    <button class="preset-btn preset-left" data-value="KeyQ">Q</button>
-                    <button class="preset-btn preset-left" data-value="KeyW">W</button>
-                    <button class="preset-btn preset-left" data-value="KeyZ">Z</button>
-                </div>
-                <div class="key-row" style="margin-top: 0.5rem;">
-                    <span>Правая рука:</span>
-                    <input type="text" id="rightKeyBind" class="bind-input" placeholder="→">
-                </div>
-                <div class="preset-group">
-                    <button class="preset-btn preset-right" data-value="ArrowRight">→</button>
-                    <button class="preset-btn preset-right" data-value="KeyD">D</button>
-                    <button class="preset-btn preset-right" data-value="KeyE">E</button>
-                    <button class="preset-btn preset-right" data-value="KeyK">K</button>
-                    <button class="preset-btn preset-right" data-value="KeyL">L</button>
-                </div>
-            </div>
+        <div class="stats-row">
+            <div class="stat-card"><span class="stat-lbl">CPS</span><span id="vCPS" class="stat-val">0.0</span></div>
+            <div class="stat-card"><span class="stat-lbl">Accuracy</span><span id="vAcc" class="stat-val">0%</span></div>
+            <div class="stat-card"><span class="stat-lbl">Stability</span><span id="vStab" class="stat-val">0%</span></div>
         </div>
-        <div style="display: flex; gap: 8px; justify-content: flex-end;">
-            <button id="saveKeysBtn" class="small">💾 Сохранить и закрыть</button>
-            <button id="resetKeysBtn" class="small">🔄 Сброс</button>
+
+        <div class="graph-wrap">
+            <canvas id="clickChart"></canvas>
+        </div>
+
+        <div class="settings">
+            <div class="set-box"><span class="stat-lbl">START BIND</span><div id="bStart" class="k-btn">F3</div></div>
+            <div class="set-box"><span class="stat-lbl">KEY 1 (LEFT)</span><div id="bLeft" class="k-btn">Space</div></div>
+            <div class="set-box" id="boxRight" style="opacity:0.2;pointer-events:none;"><span class="stat-lbl">KEY 2 (RIGHT)</span><div id="bRight" class="k-btn">L</div></div>
+            <div class="set-box"><span class="stat-lbl">BPM INTERVAL</span><input type="number" id="inInt" class="inp" value="400"></div>
+            <div class="set-box"><span class="stat-lbl">HOLD MS</span><input type="number" id="inHold" class="inp" value="80"></div>
+        </div>
+    </div>
+
+    <div class="coach-panel">
+        <div class="coach-title">CRITICAL ANALYZER</div>
+        <div id="coachText" class="coach-msg">Ожидание запуска. Посмотрим, на что ты способен...</div>
+        
+        <div class="raw-data" id="rawData">
+            <div class="raw-line"><span>Ratio L/R:</span> <span id="rRatio">0/0</span></div>
+            <div class="raw-line"><span>Avg Hold:</span> <span id="rHold">0ms</span></div>
+            <div class="raw-line"><span>Jitter:</span> <span id="rJitter">0ms</span></div>
+            <div class="raw-line"><span>Misses:</span> <span id="rMiss">0</span></div>
         </div>
     </div>
 </div>
 
 <script>
-    // === Состояние ===
-    let testActive = false;
-    let testStartTime = 0;
-    let testDurationSec = 10;
-    let currentMode = "one";
-    let testTimer = null;
-    let countdownActive = false;
-    let countdownSeconds = 3;
-    
-    let clicksData = [];
-    let pressStartMap = new Map();
-    
-    let keyConfig = {
-        startKey: "F3",
-        one: "Space",
-        twoLeft: "ArrowLeft",
-        twoRight: "ArrowRight"
+    /** --- BACKGROUND ENGINE --- **/
+    const tScene = new THREE.Scene();
+    const tCam = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    const tRenderer = new THREE.WebGLRenderer({ canvas: document.getElementById('three-canvas'), antialias: true });
+    tRenderer.setSize(window.innerWidth, window.innerHeight);
+
+    const joints = [];
+    const geom = new THREE.IcosahedronGeometry(1, 0);
+    for(let i=0; i<30; i++) {
+        const mat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.1 });
+        const m = new THREE.Mesh(geom, mat);
+        m.position.set((Math.random()-0.5)*60, (Math.random()-0.5)*60, -Math.random()*100);
+        m.userData = { spd: 0.1 + Math.random()*0.2 };
+        tScene.add(m); joints.push(m);
+    }
+    tCam.position.z = 20;
+
+    function animBackground() {
+        requestAnimationFrame(animBackground);
+        joints.forEach(j => {
+            j.rotation.x += 0.01; j.rotation.y += 0.01;
+            j.position.z += j.userData.spd;
+            if(j.position.z > 20) j.position.z = -100;
+        });
+        tRenderer.render(tScene, tCam);
+    }
+    animBackground();
+
+    /** --- LOGIC --- **/
+    let state = {
+        active: false, mode: 'normal', hands: 'one',
+        keys: { start: 'F3', left: ' ', right: 'l' },
+        targets: [], clicks: [],
+        startT: 0, curDur: 10000,
+        held: { left: false, right: false },
+        analysis: { late: 0, early: 0, hits: 0, total: 0, misses: 0 }
     };
-    
-    // DOM
-    const cpsSpan = document.getElementById("cpsValue");
-    const totalClicksSpan = document.getElementById("totalClicks");
-    const avgDurationSpan = document.getElementById("avgDuration");
-    const twoHandRatioSpan = document.getElementById("twoHandRatio");
-    const adviceDiv = document.getElementById("adviceContainer");
-    const canvas = document.getElementById("clickChart");
-    let ctx = canvas.getContext("2d");
-    const durationSelect = document.getElementById("durationSelect");
-    const countdownSelect = document.getElementById("countdownSelect");
-    const testStatusSpan = document.getElementById("testStatus");
-    const themeSelect = document.getElementById("themeSelect");
-    
-    function getNow() { return performance.now(); }
-    
-    function resizeCanvas() {
-        const container = canvas.parentElement;
-        const maxWidth = Math.min(900, container.clientWidth - 20);
-        canvas.width = maxWidth;
-        canvas.height = 200;
-        updateGraph();
+
+    const canvas = document.getElementById('clickChart');
+    const ctx = canvas.getContext('2d');
+
+    let bindTarget = null;
+    document.querySelectorAll('.k-btn').forEach(b => {
+        b.onclick = () => { bindTarget = b.id; b.classList.add('waiting'); b.innerText = "PRESS KEY"; };
+    });
+
+    window.addEventListener('keydown', (e) => {
+        if(bindTarget) {
+            const map = { bStart: 'start', bLeft: 'left', bRight: 'right' };
+            state.keys[map[bindTarget]] = e.key;
+            document.getElementById(bindTarget).innerText = e.key === ' ' ? 'SPACE' : e.key.toUpperCase();
+            document.getElementById(bindTarget).classList.remove('waiting');
+            bindTarget = null; return;
+        }
+        if(e.key === state.keys.start) { state.active ? stopTest() : startCountdown(); return; }
+        if(state.active) {
+            if(e.key === state.keys.left && !state.held.left) { press('left'); state.held.left = true; }
+            if(state.hands === 'two' && e.key === state.keys.right && !state.held.right) { press('right'); state.held.right = true; }
+        }
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if(!state.active) return;
+        if(e.key === state.keys.left) { release('left'); state.held.left = false; }
+        if(state.hands === 'two' && e.key === state.keys.right) { release('right'); state.held.right = false; }
+    });
+
+    function startCountdown() {
+        let c = 3;
+        const div = document.createElement('div'); div.className = 'countdown'; document.body.appendChild(div);
+        const selVal = parseInt(document.getElementById('durSel').value);
+        state.curDur = selVal === 0 ? 0 : selVal * 1000;
+        if(state.mode === 'line') generateTargets();
+        const t = setInterval(() => {
+            div.innerText = c > 0 ? c : "GO!";
+            if(c === -1) { clearInterval(t); div.remove(); startTest(); }
+            c--;
+        }, 800);
     }
-    
-    window.addEventListener('resize', () => resizeCanvas());
-    
-    function getGraphWindow() {
-        let dur = testDurationSec;
-        if (dur === 0) return 15;
-        return dur;
-    }
-    
-    function updateGraph() {
-        if (!ctx) ctx = canvas.getContext("2d");
-        const w = canvas.width, h = canvas.height;
-        ctx.clearRect(0, 0, w, h);
-        
-        const windowSec = getGraphWindow();
-        const now = getNow();
-        const cutoff = now - (windowSec * 1000);
-        let filtered = clicksData.filter(c => c.timestamp >= cutoff);
-        
-        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--graph-bg').trim() || "#03060c";
-        ctx.fillRect(0, 0, w, h);
-        
-        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--graph-grid').trim() || "#2a3448";
-        ctx.lineWidth = 0.5;
-        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || "#9aa9c2";
-        ctx.font = "8px monospace";
-        
-        for (let i = 0; i <= 4; i++) {
-            let x = (i / 4) * w;
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, h);
-            ctx.stroke();
-            let sec = -Math.round((windowSec * (1 - i/4)) * 10) / 10;
-            if (sec >= -windowSec) ctx.fillText(`${Math.abs(sec)}с`, x + 2, 10);
-        }
-        
-        for (let i = 0; i <= 3; i++) {
-            let y = h - (i * h/3);
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(w, y);
-            ctx.stroke();
-        }
-        
-        if (filtered.length === 0) {
-            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || "#9aa9c2";
-            ctx.font = "10px sans-serif";
-            ctx.fillText("Нет данных", w/2-30, h/2);
-            return;
-        }
-        
-        const times = filtered.map(c => c.timestamp);
-        const minT = Math.min(...times);
-        const maxT = Math.max(...times);
-        const range = maxT - minT || 1;
-        
-        for (let click of filtered) {
-            const x = ((click.timestamp - minT) / range) * w;
-            const dur = Math.min(click.duration || 0, 180);
-            const lineH = Math.min(12 + (dur / 180) * (h - 25), h - 18);
-            const yBase = h - 6;
-            const yTop = yBase - lineH;
-            
-            ctx.lineWidth = 2.8;
-            if (currentMode === "one") {
-                ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--one-hand-color').trim() || "#4c9aff";
-            } else {
-                ctx.strokeStyle = click.hand === "left" ? 
-                    (getComputedStyle(document.documentElement).getPropertyValue('--left-hand-color').trim() || "#ff884d") : 
-                    (getComputedStyle(document.documentElement).getPropertyValue('--right-hand-color').trim() || "#4dffb5");
-            }
-            ctx.beginPath();
-            ctx.moveTo(x, yBase);
-            ctx.lineTo(x, yTop);
-            ctx.stroke();
-            ctx.fillStyle = ctx.strokeStyle;
-            ctx.beginPath();
-            ctx.arc(x, yTop, 2.5, 0, 2 * Math.PI);
-            ctx.fill();
+
+    function generateTargets() {
+        state.targets = [];
+        const interval = parseInt(document.getElementById('inInt').value) || 400;
+        const h = parseInt(document.getElementById('inHold').value) || 80;
+        const limit = state.curDur === 0 ? 60000 : state.curDur;
+        let t = 1000;
+        while(t < limit - 500) {
+            state.targets.push({ t, dur: h, hand: state.hands === 'two' ? (state.targets.length % 2 ? 'right' : 'left') : 'left', hit: false });
+            t += interval;
         }
     }
-    
-    function getDurationLevel(durationMs) {
-        if (durationMs < 40) return "отлично";
-        if (durationMs < 65) return "хорошо";
-        if (durationMs < 95) return "средне";
-        if (durationMs < 130) return "плохо";
-        return "критично";
-    }
-    
-    function generateDetailedAdvice() {
-        if (clicksData.length === 0) {
-            adviceDiv.innerHTML = "⚠️ Нет нажатий! Нажмите клавишу во время теста.";
-            adviceDiv.classList.add("bad-advice");
-            adviceDiv.classList.remove("good-advice", "excellent-advice");
-            return;
-        }
-        
-        const durations = clicksData.map(c => c.duration).filter(d => d > 0);
-        const avgDur = durations.length ? durations.reduce((a,b)=>a+b,0)/durations.length : 0;
-        const minDur = durations.length ? Math.min(...durations) : 0;
-        const maxDur = durations.length ? Math.max(...durations) : 0;
-        const medianDur = durations.length ? [...durations].sort((a,b)=>a-b)[Math.floor(durations.length/2)] : 0;
-        const total = clicksData.length;
-        const actualDuration = testDurationSec === 0 ? 
-            (clicksData[clicksData.length-1]?.timestamp - testStartTime)/1000 : 
-            testDurationSec;
-        const finalCPS = total / Math.max(0.1, actualDuration);
-        
-        let advice = "";
-        let isBad = false;
-        let isGood = false;
-        let isExcellent = false;
-        
-        // КПС анализ
-        advice += `📊 <strong>ИТОГИ ТЕСТА</strong><br>`;
-        advice += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br>`;
-        advice += `🎯 <strong>КПС:</strong> ${finalCPS.toFixed(2)} кликов/сек (всего ${total} нажатий за ${actualDuration.toFixed(1)} сек)<br>`;
-        
-        if (finalCPS < 3) { advice += `🔴 <strong>КРИТИЧЕСКИ НИЗКИЙ КПС!</strong> Это очень медленная скорость. Нужно тренироваться. `; isBad = true; }
-        else if (finalCPS < 5.5) { advice += `🟠 <strong>НИЗКИЙ КПС</strong> (${finalCPS.toFixed(1)}). Попробуйте уменьшить амплитуду и расслабить кисть. `; isBad = true; }
-        else if (finalCPS < 7.5) { advice += `📊 <strong>СРЕДНИЙ КПС</strong>. Хороший уровень для начала, можно стремиться к 8+. `; }
-        else if (finalCPS < 10) { advice += `🟢 <strong>ХОРОШИЙ КПС</strong> (${finalCPS.toFixed(1)})! Выше среднего уровня. `; isGood = true; }
-        else { advice += `🏆 <strong>ОТЛИЧНЫЙ КПС</strong> (${finalCPS.toFixed(1)})! Профессиональный уровень. `; isExcellent = true; }
-        
-        // Длительность анализ
-        advice += `<br>⏱️ <strong>Длительность нажатий:</strong><br>`;
-        advice += `   • Средняя: ${Math.round(avgDur)}мс (${getDurationLevel(avgDur)})<br>`;
-        advice += `   • Медиана: ${Math.round(medianDur)}мс<br>`;
-        advice += `   • Минимум: ${Math.round(minDur)}мс | Максимум: ${Math.round(maxDur)}мс<br>`;
-        
-        if (avgDur > 130) { advice += `🔴 <strong>КРИТИЧЕСКИ ДОЛГИЕ НАЖАТИЯ!</strong> Отрывайте палец быстрее. Клик должен быть мгновенным (30-60мс). `; isBad = true; }
-        else if (avgDur > 95) { advice += `🔴 <strong>СЛИШКОМ ДОЛГИЕ НАЖАТИЯ</strong> (${Math.round(avgDur)}мс). Нужно ускорить отрыв пальца. `; isBad = true; }
-        else if (avgDur > 65) { advice += `🟠 <strong>УВЕЛИЧЕННАЯ ДЛИТЕЛЬНОСТЬ</strong>. Старайтесь делать клики короче (идеал 30-50мс). `; }
-        else if (avgDur < 45) { advice += `🟢 <strong>ИДЕАЛЬНЫЕ КОРОТКИЕ КЛИКИ!</strong> Отличная техника нажатия. `; isGood = true; }
-        else { advice += `✅ <strong>ХОРОШАЯ ДЛИТЕЛЬНОСТЬ</strong>. Можно немного сократить время контакта. `; }
-        
-        // Вариативность
-        const durationRange = maxDur - minDur;
-        if (durationRange > 100) {
-            advice += `<br>⚠️ <strong>ОГРОМНЫЙ РАЗБРОС ДЛИТЕЛЬНОСТИ</strong> (${Math.round(durationRange)}мс). Клики очень нестабильны. `;
-            isBad = true;
-        } else if (durationRange > 60) {
-            advice += `<br>⚠️ <strong>БОЛЬШОЙ РАЗБРОС ДЛИТЕЛЬНОСТИ</strong> (${Math.round(durationRange)}мс). Старайтесь делать клики одинаковыми. `;
-        }
-        
-        // Для двух рук - ПОДРОБНАЯ ПРОВЕРКА С ТОЧНОСТЬЮ ДО 7мс
-        if (currentMode === "two" && clicksData.length > 3) {
-            let leftClicks = clicksData.filter(c => c.hand === "left");
-            let rightClicks = clicksData.filter(c => c.hand === "right");
-            let left = leftClicks.length;
-            let right = rightClicks.length;
-            let ratio = left / (right + 0.001);
-            
-            advice += `<br>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br>`;
-            advice += `✌️ <strong>АНАЛИЗ СИНХРОНИЗАЦИИ РУК</strong><br>`;
-            advice += `📊 <strong>Распределение:</strong> левая ${left} (${(left/total*100).toFixed(1)}%) | правая ${right} (${(right/total*100).toFixed(1)}%)<br>`;
-            
-            if (ratio > 2.2) { advice += `🔴 <strong>КРИТИЧЕСКИЙ ПЕРЕКОС!</strong> Левая рука доминирует (${left}:${right}). Правая почти не используется. `; isBad = true; }
-            else if (ratio > 1.5) { advice += `🔴 <strong>СИЛЬНЫЙ ПЕРЕКОС ВЛЕВО</strong> (${left}:${right}). Уделите внимание правой руке. `; isBad = true; }
-            else if (ratio < 0.45) { advice += `🔴 <strong>СИЛЬНЫЙ ПЕРЕКОС ВПРАВО</strong> (${left}:${right}). Левая рука отстает. `; isBad = true; }
-            else if (Math.abs(ratio - 1) > 0.35) { advice += `🟠 Неравномерное распределение нагрузки (${left}:${right}). `; }
-            else { advice += `✅ <strong>ОТЛИЧНЫЙ БАЛАНС РУК!</strong> Распределение близко к 50/50. `; isGood = true; }
-            
-            // ДЛИТЕЛЬНОСТЬ РУК - ЖЕСТКАЯ ПРОВЕРКА
-            let leftAvgDur = leftClicks.length ? leftClicks.reduce((s,c)=>s+c.duration,0)/left : 0;
-            let rightAvgDur = rightClicks.length ? rightClicks.reduce((s,c)=>s+c.duration,0)/right : 0;
-            let durationDiff = Math.abs(leftAvgDur - rightAvgDur);
-            
-            advice += `<br>⏱️ <strong>Длительность нажатий по рукам:</strong><br>`;
-            advice += `   • Левая рука: ${Math.round(leftAvgDur)}мс (${getDurationLevel(leftAvgDur)})<br>`;
-            advice += `   • Правая рука: ${Math.round(rightAvgDur)}мс (${getDurationLevel(rightAvgDur)})<br>`;
-            advice += `   • Разница: ${Math.round(durationDiff)}мс<br>`;
-            
-            // Жесткая проверка на разницу в 7мс и выше
-            if (durationDiff >= 30) {
-                advice += `🔴 <strong>КРИТИЧЕСКАЯ АСИММЕТРИЯ!</strong> Разница ${Math.round(durationDiff)}мс. Техника рук кардинально отличается. Нужно выравнивать время нажатия. `;
-                isBad = true;
-            } else if (durationDiff >= 15) {
-                advice += `🔴 <strong>СИЛЬНАЯ АСИММЕТРИЯ!</strong> Разница ${Math.round(durationDiff)}мс. Одна рука зажимает клавишу дольше другой. `;
-                isBad = true;
-            } else if (durationDiff >= 7) {
-                advice += `🟠 <strong>ЗАМЕТНАЯ РАЗНИЦА</strong> (${Math.round(durationDiff)}мс). Старайтесь синхронизировать длительность нажатий. `;
-            } else if (durationDiff >= 3) {
-                advice += `🟢 <strong>НЕБОЛЬШАЯ РАЗНИЦА</strong> (${Math.round(durationDiff)}мс). Хорошая синхронизация. `;
-            } else {
-                advice += `🏆 <strong>ИДЕАЛЬНАЯ СИНХРОНИЗАЦИЯ!</strong> Разница менее 3мс. Профессиональный уровень. `;
-                isExcellent = true;
-            }
-            
-            // Стабильность внутри каждой руки
-            if (leftClicks.length > 2) {
-                let leftDurs = leftClicks.map(c => c.duration);
-                let leftVar = Math.max(...leftDurs) - Math.min(...leftDurs);
-                if (leftVar > 60) advice += `<br>⚠️ Левая рука: большой разброс длительности (${Math.round(leftVar)}мс). `;
-            }
-            if (rightClicks.length > 2) {
-                let rightDurs = rightClicks.map(c => c.duration);
-                let rightVar = Math.max(...rightDurs) - Math.min(...rightDurs);
-                if (rightVar > 60) advice += `⚠️ Правая рука: большой разброс длительности (${Math.round(rightVar)}мс). `;
-            }
-        }
-        
-        // Стабильность темпа
-        if (clicksData.length > 5) {
-            let intervals = [];
-            for (let i = 1; i < clicksData.length; i++) {
-                intervals.push(clicksData[i].timestamp - clicksData[i-1].timestamp);
-            }
-            if (intervals.length > 0) {
-                let avgInterval = intervals.reduce((a,b)=>a+b,0)/intervals.length;
-                let variance = intervals.map(i => Math.abs(i - avgInterval)).reduce((a,b)=>a+b,0)/intervals.length;
-                advice += `<br>🎵 <strong>Ритмичность:</strong> разброс интервалов ${Math.round(variance)}мс<br>`;
-                if (variance > 100) {
-                    advice += `🔴 Очень нестабильный темп. Работайте над ритмичностью. `;
-                    isBad = true;
-                } else if (variance > 60) {
-                    advice += `🟠 Нестабильный темп. Старайтесь кликать равномернее. `;
-                } else if (variance < 35) {
-                    advice += `🏆 Отличный стабильный ритм! Высокий уровень контроля. `;
-                    isExcellent = true;
-                } else {
-                    advice += `✅ Хороший стабильный темп. `;
-                }
-            }
-        }
-        
-        if (total < 5) advice = "⚠️ Слишком мало нажатий для полноценного анализа. Сделайте больше кликов!";
-        
-        adviceDiv.innerHTML = `💡 ${advice}`;
-        adviceDiv.classList.remove("bad-advice", "good-advice", "excellent-advice");
-        if (isBad) adviceDiv.classList.add("bad-advice");
-        else if (isExcellent) adviceDiv.classList.add("excellent-advice");
-        else if (isGood) adviceDiv.classList.add("good-advice");
-    }
-    
-    function updateStatsAndAdvice() {
-        if (!testActive && clicksData.length === 0) {
-            totalClicksSpan.innerText = "0";
-            cpsSpan.innerText = "0.00";
-            avgDurationSpan.innerText = "0";
-            twoHandRatioSpan.innerText = "-/-";
-            return;
-        }
-        const now = getNow();
-        let recent = clicksData.filter(c => (now - c.timestamp) <= 3000);
-        let cps = (recent.length / 3).toFixed(2);
-        cpsSpan.innerText = cps;
-        totalClicksSpan.innerText = clicksData.length;
-        
-        let durations = clicksData.filter(c => c.duration > 0).map(c => c.duration);
-        let avgDur = durations.length ? Math.round(durations.reduce((a,b)=>a+b,0)/durations.length) : 0;
-        avgDurationSpan.innerText = avgDur;
-        
-        if (currentMode === "two") {
-            let leftCount = clicksData.filter(c => c.hand === "left").length;
-            let rightCount = clicksData.filter(c => c.hand === "right").length;
-            twoHandRatioSpan.innerText = `${leftCount} / ${rightCount}`;
-        } else {
-            twoHandRatioSpan.innerText = "-/-";
-        }
-        
-        if (!testActive && clicksData.length > 0) generateDetailedAdvice();
-        updateGraph();
-    }
-    
-    function registerPress(handId, timestamp) {
-        if (!testActive) return;
-        pressStartMap.set(handId, timestamp);
-    }
-    
-    function registerRelease(handId, timestamp) {
-        if (!testActive) return;
-        let start = pressStartMap.get(handId);
-        if (start) {
-            let duration = Math.min(450, Math.max(4, timestamp - start));
-            clicksData.push({ timestamp, duration, hand: currentMode === "two" ? handId : "one" });
-            pressStartMap.delete(handId);
-            updateStatsAndAdvice();
-        }
-    }
-    
-    function resetTestData() {
-        if (testTimer) clearTimeout(testTimer);
-        clicksData = [];
-        pressStartMap.clear();
-        updateStatsAndAdvice();
-    }
-    
-    function stopCurrentTest() {
-        if (testActive) {
-            testActive = false;
-            if (testTimer) clearTimeout(testTimer);
-            testTimer = null;
-            testStatusSpan.innerHTML = "⏹️ Тест прерван";
-            if (clicksData.length > 0) generateDetailedAdvice();
-            updateStatsAndAdvice();
-        }
-    }
-    
-    function showCountdown(seconds, callback) {
-        countdownActive = true;
-        let count = seconds;
-        const overlay = document.createElement('div');
-        overlay.className = 'countdown-overlay';
-        document.body.appendChild(overlay);
-        
-        function update() {
-            if (count > 0) {
-                overlay.textContent = count;
-                count--;
-                setTimeout(update, 1000);
-            } else {
-                overlay.textContent = "GO!";
-                setTimeout(() => {
-                    overlay.remove();
-                    countdownActive = false;
-                    callback();
-                }, 300);
-            }
-        }
-        update();
-    }
-    
+
     function startTest() {
-        if (testActive || countdownActive) return;
-        if (testTimer) clearTimeout(testTimer);
+        state.clicks = []; state.active = true; state.startT = performance.now();
+        state.analysis = { late: 0, early: 0, hits: 0, total: 0, misses: 0 };
+        if(state.curDur > 0) setTimeout(() => { if(state.active) stopTest(); }, state.curDur);
+    }
+
+    function stopTest() { state.active = false; analyzeGame(true); }
+
+    function press(hand) {
+        const now = performance.now() - state.startT;
+        state.clicks.push({ start: now, end: null, hand });
+        if(state.mode === 'line') {
+            const target = state.targets.find(t => !t.hit && Math.abs(t.t - now) < 200);
+            if(target && (state.hands === 'one' || target.hand === hand)) {
+                target.hit = true; state.analysis.hits++;
+            } else { state.analysis.misses++; }
+            state.analysis.total++;
+        }
+        analyzeGame();
+    }
+
+    function release(hand) {
+        const now = performance.now() - state.startT;
+        const last = state.clicks.slice().reverse().find(c => c.hand === hand && c.end === null);
+        if(last) last.end = now;
+        analyzeGame();
+    }
+
+    function analyzeGame(finished = false) {
+        const now = performance.now() - state.startT;
+        const lClicks = state.clicks.filter(c => c.hand === 'left').length;
+        const rClicks = state.clicks.filter(c => c.hand === 'right').length;
+        const total = lClicks + rClicks;
+
+        // Stats UI
+        document.getElementById('vCPS').innerText = (total / (now/1000)).toFixed(1);
+        document.getElementById('rRatio').innerText = `${lClicks} / ${rClicks}`;
         
-        countdownSeconds = parseInt(countdownSelect.value);
-        showCountdown(countdownSeconds, () => {
-            resetTestData();
-            testActive = true;
-            testStartTime = getNow();
-            let durVal = parseInt(durationSelect.value);
-            testDurationSec = durVal;
+        // Stability calculation (Stricter)
+        let stability = 0;
+        if(state.clicks.length > 5) {
+            const ivs = [];
+            for(let i=1; i<state.clicks.length; i++) ivs.push(state.clicks[i].start - state.clicks[i-1].start);
+            const avg = ivs.reduce((a,b)=>a+b,0) / ivs.length;
+            const jitter = Math.sqrt(ivs.reduce((a,b)=>a+Math.pow(b-avg,2),0) / ivs.length);
+            document.getElementById('rJitter').innerText = Math.round(jitter) + 'ms';
+            stability = Math.max(0, 100 - (jitter / 0.8)); // Harder threshold
+        }
+        document.getElementById('vStab').innerText = Math.round(stability) + '%';
+
+        // Hold duration
+        const finishedClicks = state.clicks.filter(c => c.end !== null);
+        const avgHold = finishedClicks.length ? finishedClicks.reduce((a,b)=>a+(b.end-b.start),0)/finishedClicks.length : 0;
+        document.getElementById('rHold').innerText = Math.round(avgHold) + 'ms';
+
+        // Coach Harsh Messages
+        const coach = document.getElementById('coachText');
+        let msg = "";
+        
+        if(state.hands === 'two' && total > 10) {
+            const diff = Math.abs(lClicks - rClicks) / total;
+            if(diff > 0.25) msg += "Ужасный баланс рук! Одна рука ленится. ";
+        }
+        if(avgHold > 0 && avgHold < 40) msg += "Слишком короткие клики, система их не засчитает. ";
+        if(avgHold > 200) msg += "Ты слишком долго держишь клавишу, тормозишь CPS. ";
+        if(stability < 60 && total > 10) msg += "Твой ритм полностью разбит. Ты кликаешь как в лихорадке. ";
+        
+        if(finished && stability > 90 && lClicks === rClicks) msg = "Идеально. Ты машина.";
+        else if(!msg) msg = "Пока терпимо. Но старайся лучше.";
+        
+        coach.innerText = msg;
+    }
+
+    function draw() {
+        canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+        ctx.clearRect(0,0,canvas.width, canvas.height);
+        
+        const now = state.active ? (performance.now() - state.startT) : 0;
+        const viewMs = 3000;
+        const centerX = canvas.width / 2;
+        const getX = (t) => centerX + (t - now) * (canvas.width / viewMs);
+
+        // Grid
+        ctx.strokeStyle = '#111';
+        for(let i=-10; i<10; i++) {
+            const gx = getX(Math.floor(now/500)*500 + i*500);
+            ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, canvas.height); ctx.stroke();
+        }
+
+        // Targets (Line mode)
+        if (state.mode === 'line') {
+            state.targets.forEach(t => {
+                const x = getX(t.t);
+                if(x < -50 || x > canvas.width + 50) return;
+                ctx.strokeStyle = t.hit ? '#222' : (t.hand === 'left' ? varColor('--left-hand') : varColor('--right-hand'));
+                ctx.lineWidth = 3;
+                ctx.strokeRect(x, 50, 5, canvas.height - 100);
+            });
+        }
+
+        // Clicks (BRIGHT NEON)
+        state.clicks.forEach(c => {
+            const x = getX(c.start);
+            const w = (( (c.end || now) - c.start) / viewMs) * canvas.width;
+            const color = c.hand === 'left' ? '#ff3333' : '#33ff77';
             
-            if (testDurationSec === 0) {
-                testStatusSpan.innerHTML = "♾️ Бесконечный режим";
-            } else {
-                testStatusSpan.innerHTML = `⏱️ Тест ${testDurationSec} сек ...`;
-                testTimer = setTimeout(() => {
-                    if (testActive) {
-                        testActive = false;
-                        testStatusSpan.innerHTML = "✅ Тест завершён";
-                        generateDetailedAdvice();
-                        updateStatsAndAdvice();
-                    }
-                    testTimer = null;
-                }, testDurationSec * 1000);
-            }
-            updateStatsAndAdvice();
+            ctx.shadowBlur = 15; ctx.shadowColor = color;
+            ctx.fillStyle = color;
+            // Draw as a glowing bar
+            ctx.fillRect(x, canvas.height/2 - 20, Math.max(w, 10), 40);
+            ctx.shadowBlur = 0;
         });
+
+        // FIXED CROSSHAIR
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 4;
+        ctx.shadowBlur = 20; ctx.shadowColor = '#0ff';
+        ctx.beginPath(); ctx.moveTo(centerX, 0); ctx.lineTo(centerX, canvas.height); ctx.stroke();
+        // Crosshair Box
+        ctx.strokeRect(centerX - 15, canvas.height/2 - 15, 30, 30);
+        ctx.shadowBlur = 0;
+
+        requestAnimationFrame(draw);
     }
-    
-    function onKeyDown(e) {
-        let key = e.key;
-        
-        if (!testActive && !countdownActive && key === keyConfig.startKey) {
-            e.preventDefault();
-            startTest();
-            return;
-        }
-        
-        if (testActive && key === keyConfig.startKey) {
-            e.preventDefault();
-            stopCurrentTest();
-            return;
-        }
-        
-        if (!testActive) return;
-        
-        if (currentMode === "one") {
-            if (key === keyConfig.one) {
-                e.preventDefault();
-                registerPress("main", getNow());
-            }
-        } else if (currentMode === "two") {
-            if (key === keyConfig.twoLeft) {
-                e.preventDefault();
-                registerPress("left", getNow());
-            } else if (key === keyConfig.twoRight) {
-                e.preventDefault();
-                registerPress("right", getNow());
-            }
-        }
+    function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name); }
+    draw();
+
+    document.getElementById('mNormal').onclick = () => { state.mode = 'normal'; updateUI(); };
+    document.getElementById('mLine').onclick = () => { state.mode = 'line'; updateUI(); };
+    document.getElementById('hOne').onclick = () => { state.hands = 'one'; updateUI(); };
+    document.getElementById('hTwo').onclick = () => { state.hands = 'two'; updateUI(); };
+
+    function updateUI() {
+        document.getElementById('mNormal').classList.toggle('active', state.mode==='normal');
+        document.getElementById('mLine').classList.toggle('active', state.mode==='line');
+        document.getElementById('hOne').classList.toggle('active', state.hands==='one');
+        document.getElementById('hTwo').classList.toggle('active', state.hands==='two');
+        document.getElementById('boxRight').style.opacity = state.hands==='two'?'1':'0.2';
+        document.getElementById('boxRight').style.pointerEvents = state.hands==='two'?'all':'none';
+        state.active = false;
     }
-    
-    function onKeyUp(e) {
-        if (!testActive) return;
-        let key = e.key;
-        
-        if (currentMode === "one" && key === keyConfig.one) {
-            e.preventDefault();
-            registerRelease("main", getNow());
-        } else if (currentMode === "two") {
-            if (key === keyConfig.twoLeft) {
-                e.preventDefault();
-                registerRelease("left", getNow());
-            } else if (key === keyConfig.twoRight) {
-                e.preventDefault();
-                registerRelease("right", getNow());
-            }
-        }
-    }
-    
-    function loadSettingsToUI() {
-        document.getElementById("startKeyBind").value = keyConfig.startKey;
-        document.getElementById("oneHandKey").value = keyConfig.one === "Space" ? "Пробел" : keyConfig.one;
-        document.getElementById("leftKeyBind").value = keyConfig.twoLeft === "ArrowLeft" ? "←" : keyConfig.twoLeft;
-        document.getElementById("rightKeyBind").value = keyConfig.twoRight === "ArrowRight" ? "→" : keyConfig.twoRight;
-    }
-    
-    function saveKeysAndClose() {
-        let startRaw = document.getElementById("startKeyBind").value.trim();
-        if (startRaw === "Пробел") startRaw = "Space";
-        if (startRaw) keyConfig.startKey = startRaw;
-        
-        let oneRaw = document.getElementById("oneHandKey").value.trim();
-        if (oneRaw === "Пробел") oneRaw = "Space";
-        keyConfig.one = oneRaw || "Space";
-        
-        let leftRaw = document.getElementById("leftKeyBind").value.trim();
-        if (leftRaw === "←") keyConfig.twoLeft = "ArrowLeft";
-        else keyConfig.twoLeft = leftRaw || "ArrowLeft";
-        
-        let rightRaw = document.getElementById("rightKeyBind").value.trim();
-        if (rightRaw === "→") keyConfig.twoRight = "ArrowRight";
-        else keyConfig.twoRight = rightRaw || "ArrowRight";
-        
-        document.getElementById("settingsPanel").style.display = "none";
-        stopCurrentTest();
-        resetTestData();
-        testStatusSpan.innerHTML = "⚪ Готов";
-        alert("Настройки сохранены!");
-    }
-    
-    function resetKeys() {
-        keyConfig = { startKey: "F3", one: "Space", twoLeft: "ArrowLeft", twoRight: "ArrowRight" };
-        loadSettingsToUI();
-        stopCurrentTest();
-        resetTestData();
-        testStatusSpan.innerHTML = "⚪ Готов";
-        alert("Настройки сброшены к стандартным");
-    }
-    
-    function setMode(mode) {
-        currentMode = mode;
-        document.querySelectorAll(".mode-btn").forEach(btn => {
-            if(btn.dataset.mode === mode) btn.classList.add("active");
-            else btn.classList.remove("active");
-        });
-        stopCurrentTest();
-        resetTestData();
-    }
-    
-    function setTheme(theme) {
-        if (theme === 'light') document.body.classList.add('light');
-        else document.body.classList.remove('light');
-        updateGraph();
-    }
-    
-    document.querySelectorAll(".mode-btn").forEach(btn => {
-        btn.addEventListener("click", () => setMode(btn.dataset.mode));
-    });
-    durationSelect.addEventListener("change", () => stopCurrentTest());
-    themeSelect.addEventListener("change", (e) => setTheme(e.target.value));
-    
-    document.getElementById("openSettingsBtn").onclick = () => {
-        const panel = document.getElementById("settingsPanel");
-        panel.style.display = panel.style.display === "none" ? "block" : "none";
-        if (panel.style.display === "block") loadSettingsToUI();
-    };
-    document.getElementById("saveKeysBtn").onclick = saveKeysAndClose;
-    document.getElementById("resetKeysBtn").onclick = resetKeys;
-    
-    document.querySelectorAll('.preset-start').forEach(btn => {
-        btn.onclick = () => { document.getElementById("startKeyBind").value = btn.dataset.value; };
-    });
-    document.querySelectorAll('.preset-one').forEach(btn => {
-        btn.onclick = () => { 
-            let val = btn.dataset.value;
-            document.getElementById("oneHandKey").value = val === "Space" ? "Пробел" : val;
-        };
-    });
-    document.querySelectorAll('.preset-left').forEach(btn => {
-        btn.onclick = () => { 
-            let val = btn.dataset.value;
-            document.getElementById("leftKeyBind").value = val === "ArrowLeft" ? "←" : val;
-        };
-    });
-    document.querySelectorAll('.preset-right').forEach(btn => {
-        btn.onclick = () => { 
-            let val = btn.dataset.value;
-            document.getElementById("rightKeyBind").value = val === "ArrowRight" ? "→" : val;
-        };
-    });
-    
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
-    setMode("one");
-    resizeCanvas();
-    resetTestData();
 </script>
 </body>
 </html>
