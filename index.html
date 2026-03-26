@@ -1,363 +1,820 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>cpstestlastgd</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
-        :root {
-            --bg-dark: #010102;
-            --container-bg: rgba(5, 7, 12, 0.95);
-            --card-bg: rgba(15, 18, 25, 0.98);
-            --text-primary: #ffffff;
-            --text-secondary: #667085;
-            --accent: #00ffff;
-            --left-hand: #ff3333;
-            --right-hand: #33ff77;
-            --error: #ff0055;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CPS Analyzer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap');
 
-        body {
-            background: var(--bg-dark);
-            font-family: 'Consolas', 'Monaco', monospace;
-            color: var(--text-primary);
-            overflow: hidden;
-            height: 100vh;
-        }
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;user-select:none;}
 
-        #three-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.6; }
+:root{
+  --bg:#060a14;
+  --surface:rgba(8,13,24,0.97);
+  --card:rgba(12,18,32,0.99);
+  --card-inner:rgba(255,255,255,0.02);
+  --border:rgba(0,200,255,0.1);
+  --border-hi:rgba(0,200,255,0.32);
+  --t1:#dbe8ff;--t2:#4a6080;--t3:#2a3a55;
+  --accent:#00c8ff;--ar:0,200,255;--ag:rgba(0,200,255,0.22);
+  --k1:#ff4466;--k1r:255,68,102;
+  --k2:#44ffaa;--k2r:68,255,170;
+  --err:#ff3366;--ok:#00ffaa;--warn:#ffb300;
+  --shadow:0 4px 32px rgba(0,0,0,0.65);
+  --r:12px;
+}
 
-        .app-container {
-            position: relative; z-index: 1; max-width: 1200px; width: 98%; margin: 10px auto;
-            background: var(--container-bg); backdrop-filter: blur(20px); border-radius: 15px;
-            padding: 20px; border: 1px solid rgba(0, 255, 255, 0.1);
-            display: grid; grid-template-columns: 1fr 320px; gap: 15px;
-        }
+[data-theme="light"]{
+  --bg:#eef2f8;--surface:rgba(238,244,255,0.98);--card:rgba(255,255,255,0.99);
+  --card-inner:rgba(0,0,60,0.015);--border:rgba(0,80,200,0.12);--border-hi:rgba(0,80,200,0.32);
+  --t1:#0a1525;--t2:#4a6080;--t3:#90aac0;
+  --accent:#0066cc;--ar:0,102,204;--ag:rgba(0,102,204,0.15);
+  --k1:#cc0033;--k1r:204,0,51;--k2:#007744;--k2r:0,119,68;
+  --shadow:0 4px 20px rgba(0,0,0,0.1);
+}
 
-        .main-col { display: flex; flex-direction: column; gap: 10px; }
+body{font-family:'JetBrains Mono','Consolas','Cascadia Code',monospace;background:var(--bg);color:var(--t1);overflow:hidden;height:100vh;transition:background .4s,color .3s;}
 
-        .header { display: flex; justify-content: space-between; align-items: center; background: #000; padding: 10px; border-radius: 8px; border: 1px solid #222; }
-        .mode-btn { background: #111; border: 1px solid #333; color: #555; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; transition: 0.2s; }
-        .mode-btn.active { background: var(--accent); color: #000; font-weight: bold; border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+#three-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;opacity:.55;transition:opacity .8s;}
 
-        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .stat-card { background: var(--card-bg); padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #222; }
-        .stat-val { font-size: 1.8rem; font-weight: 900; display: block; color: var(--accent); }
-        .stat-lbl { font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; }
+.app{position:relative;z-index:2;height:100vh;display:flex;flex-direction:column;padding:8px;gap:8px;max-width:1320px;width:100%;margin:0 auto;}
 
-        .graph-wrap { background: #000; border-radius: 10px; position: relative; border: 2px solid #111; height: 320px; overflow: hidden; }
-        #clickChart { width: 100%; height: 100%; }
+.hdr{flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:8px 14px;display:flex;align-items:center;gap:10px;flex-wrap:nowrap;}
+.logo{font-size:.95rem;font-weight:800;letter-spacing:2px;color:var(--accent);text-shadow:0 0 18px var(--ag);white-space:nowrap;flex-shrink:0;margin-right:4px;}
+.div{width:1px;height:22px;background:var(--border);flex-shrink:0;}
+.spacer{flex:1;}
+.btn-g{display:flex;gap:4px;}
+.btn{background:transparent;border:1px solid var(--border);color:var(--t2);padding:5px 13px;border-radius:6px;cursor:pointer;font-size:.7rem;font-family:inherit;font-weight:700;letter-spacing:1px;text-transform:uppercase;transition:all .2s;outline:none;}
+.btn:hover{border-color:var(--border-hi);color:var(--t1);}
+.btn.active{background:var(--accent);color:#000;border-color:var(--accent);box-shadow:0 0 14px var(--ag);}
+select.btn{cursor:pointer;padding-right:6px;}
+.ibtn{background:transparent;border:1px solid var(--border);color:var(--t2);padding:5px 9px;border-radius:6px;cursor:pointer;font-size:.85rem;transition:all .2s;flex-shrink:0;}
+.ibtn:hover{border-color:var(--border-hi);color:var(--t1);}
+.boost-pill{display:none;font-size:.65rem;font-weight:700;background:rgba(255,160,0,.12);border:1px solid rgba(255,160,0,.4);color:#ffb300;padding:4px 10px;border-radius:6px;letter-spacing:1px;animation:blink .8s infinite;}
 
-        .settings { background: var(--card-bg); padding: 15px; border-radius: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; border: 1px solid #222; }
-        .set-box { display: flex; flex-direction: column; gap: 4px; }
-        .k-btn { background: #000; border: 1px solid #444; color: var(--accent); padding: 8px; border-radius: 6px; text-align: center; cursor: pointer; font-weight: bold; }
-        .k-btn.waiting { border-color: var(--error); color: var(--error); animation: pulse 0.6s infinite; }
-        .inp { background: #000; border: 1px solid #333; color: #fff; padding: 6px; border-radius: 4px; width: 100%; outline: none; }
+.main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 298px;gap:8px;}
+.left{display:flex;flex-direction:column;gap:8px;min-height:0;}
 
-        /* Панель Жесткого Тренера */
-        .coach-panel { background: rgba(0, 0, 0, 0.8); border-radius: 10px; padding: 15px; display: flex; flex-direction: column; gap: 12px; border: 1px solid #333; height: 100%; overflow-y: auto; }
-        .coach-title { color: var(--error); font-weight: bold; font-size: 0.9rem; border-bottom: 2px solid var(--error); padding-bottom: 5px; }
-        .coach-msg { font-size: 0.85rem; line-height: 1.4; color: #ff8888; font-style: italic; }
-        
-        .raw-data { margin-top: 10px; font-size: 0.75rem; color: #888; border-top: 1px solid #222; padding-top: 10px; }
-        .raw-line { display: flex; justify-content: space-between; margin-bottom: 4px; }
-        .raw-line span:last-child { color: #fff; }
+.stats-row{flex-shrink:0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:10px 14px;text-align:center;position:relative;overflow:hidden;transition:border-color .3s,box-shadow .3s;}
+.sc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:.5;}
+.slbl{display:block;font-size:.55rem;letter-spacing:2px;text-transform:uppercase;color:var(--t2);margin-bottom:3px;}
+.sval{display:block;font-size:2.1rem;font-weight:800;color:var(--accent);text-shadow:0 0 26px var(--ag);line-height:1;transition:color .3s,text-shadow .3s;}
+.ssub{display:block;font-size:.56rem;color:var(--t3);margin-top:3px;min-height:.8em;}
 
-        @keyframes pulse { 50% { opacity: 0.3; } }
-        .countdown { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; font-size: 10rem; font-weight: 900; z-index: 1000; color: var(--error); }
-    </style>
+.gwrap{flex:1;min-height:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);position:relative;overflow:hidden;}
+#clickChart{display:block;width:100%;height:100%;}
+.ginfo{position:absolute;top:8px;left:12px;font-size:.58rem;color:var(--t3);letter-spacing:1px;pointer-events:none;}
+
+.settings{flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:10px 14px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
+.sbox{display:flex;flex-direction:column;gap:4px;min-width:82px;}
+.kbtn{background:transparent;border:1px solid var(--border-hi);color:var(--accent);padding:7px 10px;border-radius:6px;text-align:center;cursor:pointer;font-weight:600;font-size:.74rem;font-family:inherit;letter-spacing:.5px;transition:all .2s;}
+.kbtn:hover{box-shadow:0 0 12px var(--ag);border-color:var(--accent);}
+.kbtn.waiting{border-color:var(--err);color:var(--err);animation:blink .4s infinite;}
+.inp{background:transparent;border:1px solid var(--border);color:var(--t1);padding:7px 8px;border-radius:6px;outline:none;font-family:inherit;font-size:.78rem;width:100%;transition:border-color .2s;-moz-appearance:textfield;}
+.inp::-webkit-outer-spin-button,.inp::-webkit-inner-spin-button{-webkit-appearance:none;}
+.inp:focus{border-color:var(--accent);}
+
+.coach{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;}
+.coach-hd{flex-shrink:0;padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.cdot{width:7px;height:7px;border-radius:50%;background:var(--err);box-shadow:0 0 8px var(--err);flex-shrink:0;animation:blink 2s infinite;transition:background .3s,box-shadow .3s;}
+.ctitle{font-size:.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+.cbody{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:9px;}
+.cbody::-webkit-scrollbar{width:3px;}
+.cbody::-webkit-scrollbar-thumb{background:var(--border-hi);border-radius:3px;}
+
+.vbox{border-radius:8px;padding:10px 12px;background:rgba(255,50,100,.05);border:1px solid rgba(255,50,100,.18);}
+.vtag{font-size:.55rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--err);margin-bottom:5px;display:block;}
+#coachTxt{font-size:.79rem;line-height:1.5;color:var(--t1);}
+.sec-lbl{font-size:.55rem;letter-spacing:2px;text-transform:uppercase;color:var(--t2);padding-bottom:4px;border-bottom:1px solid var(--border);}
+
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.mitem{background:var(--card-inner);border:1px solid var(--border);border-radius:7px;padding:7px 9px;}
+.mlbl{font-size:.56rem;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:2px;}
+.mval{font-size:.95rem;font-weight:600;color:var(--t1);}
+.badge{display:inline-block;font-size:.5rem;padding:1px 5px;border-radius:3px;font-weight:600;margin-left:4px;vertical-align:middle;}
+.badge.g{background:rgba(0,255,170,.1);color:#00ffaa;}
+.badge.r{background:rgba(255,50,100,.1);color:#ff3366;}
+.badge.y{background:rgba(255,180,0,.1);color:#ffb300;}
+
+.tips-list{display:flex;flex-direction:column;gap:4px;}
+.tip{font-size:.72rem;color:var(--t2);line-height:1.4;padding:6px 8px 6px 10px;border-left:2px solid var(--accent);background:rgba(var(--ar),.03);border-radius:0 6px 6px 0;}
+
+.gbox{border-radius:9px;padding:13px;border:1px solid var(--border);text-align:center;display:none;background:var(--card-inner);}
+.gbox.show{display:block;}
+.gval{font-size:3.2rem;font-weight:800;color:var(--accent);text-shadow:0 0 30px var(--ag);line-height:1;}
+.gdesc{font-size:.62rem;color:var(--t2);text-transform:uppercase;letter-spacing:1.5px;margin-top:4px;}
+.gscore{font-size:.7rem;color:var(--t3);margin-top:2px;}
+
+@keyframes boost-pulse{
+  0%,100%{box-shadow:0 0 20px rgba(255,150,0,.18),inset 0 0 20px rgba(255,150,0,.03);}
+  50%{box-shadow:0 0 55px rgba(255,150,0,.45),inset 0 0 40px rgba(255,150,0,.07);}
+}
+body.boost .gwrap,body.boost .coach{border-color:rgba(255,150,0,.38);animation:boost-pulse 1.1s ease-in-out infinite;}
+body.boost .sc{border-color:rgba(255,150,0,.2);}
+body.boost .hdr{border-color:rgba(255,150,0,.25);}
+body.boost .sval{color:#ffb300!important;text-shadow:0 0 28px rgba(255,160,0,.45)!important;}
+body.boost .sc::after{background:linear-gradient(90deg,transparent,#ffb300,transparent)!important;}
+body.boost .boost-pill{display:flex;align-items:center;}
+body.boost::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;box-shadow:inset 0 0 90px rgba(255,100,0,.1);}
+
+.boost-banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:500;pointer-events:none;}
+.boost-txt{font-size:5rem;font-weight:800;letter-spacing:10px;color:#ffb300;text-shadow:0 0 60px #ff8000,0 0 120px #ff4000;opacity:0;}
+@keyframes boost-in{0%{opacity:0;transform:scale(1.6)letter-spacing:20px;}15%{opacity:1;transform:scale(1);}70%{opacity:1;}100%{opacity:0;transform:scale(.8);}}
+.boost-banner.flash .boost-txt{animation:boost-in 1.6s ease forwards;}
+
+.countdown{position:fixed;inset:0;background:rgba(0,0,0,.93);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;}
+.cdnum{font-size:9rem;font-weight:800;color:var(--accent);text-shadow:0 0 55px var(--ag);line-height:1;transition:color .2s;}
+.cdsub{font-size:.75rem;color:var(--t2);letter-spacing:4px;text-transform:uppercase;margin-top:8px;}
+
+@keyframes blink{50%{opacity:.15;}}
+</style>
 </head>
 <body>
 
 <canvas id="three-canvas"></canvas>
 
-<div class="app-container">
-    <div class="main-col">
-        <div class="header">
-            <div style="display: flex; gap: 5px;">
-                <button class="mode-btn active" id="mNormal">NORMAL</button>
-                <button class="mode-btn" id="mLine">RHYTHM</button>
-            </div>
-            <div style="display: flex; gap: 5px;">
-                <button class="mode-btn active" id="hOne">1 HAND</button>
-                <button class="mode-btn" id="hTwo">2 HANDS</button>
-            </div>
-            <select id="durSel" class="mode-btn">
-                <option value="5">5s</option>
-                <option value="10" selected>10s</option>
-                <option value="30">30s</option>
-                <option value="0">∞</option>
-            </select>
-        </div>
+<div class="boost-banner" id="boostBanner"><div class="boost-txt" id="boostTxt">БУСТ</div></div>
 
-        <div class="stats-row">
-            <div class="stat-card"><span class="stat-lbl">CPS</span><span id="vCPS" class="stat-val">0.0</span></div>
-            <div class="stat-card"><span class="stat-lbl">Accuracy</span><span id="vAcc" class="stat-val">0%</span></div>
-            <div class="stat-card"><span class="stat-lbl">Stability</span><span id="vStab" class="stat-val">0%</span></div>
-        </div>
+<div class="app">
 
-        <div class="graph-wrap">
-            <canvas id="clickChart"></canvas>
-        </div>
+  <div class="hdr">
+    <div class="logo">CPS ANALYZER</div>
+    <div class="div"></div>
+    <div class="btn-g">
+      <button class="btn active" id="mNormal" data-t="modeNormal">ОБЫЧНЫЙ</button>
+      <button class="btn" id="mRhythm" data-t="modeRhythm">РИТМ</button>
+    </div>
+    <div class="div"></div>
+    <select id="durSel" class="btn"></select>
+    <div class="spacer"></div>
+    <div class="boost-pill" id="boostPill">🔥</div>
+    <button class="ibtn" id="themeBtn">🌙</button>
+    <button class="ibtn" id="langBtn">RU</button>
+  </div>
 
-        <div class="settings">
-            <div class="set-box"><span class="stat-lbl">START BIND</span><div id="bStart" class="k-btn">F3</div></div>
-            <div class="set-box"><span class="stat-lbl">KEY 1</span><div id="bLeft" class="k-btn">Space</div></div>
-            <div class="set-box" id="boxRight" style="opacity:0.2;pointer-events:none;"><span class="stat-lbl">KEY 2</span><div id="bRight" class="k-btn">L</div></div>
-            <div class="set-box"><span class="stat-lbl">BPM INTERVAL</span><input type="number" id="inInt" class="inp" value="400"></div>
-            <div class="set-box"><span class="stat-lbl">HOLD MS</span><input type="number" id="inHold" class="inp" value="80"></div>
+  <div class="main">
+    <div class="left">
+      <div class="stats-row">
+        <div class="sc">
+          <span class="slbl" data-t="cpsLabel">CPS</span>
+          <span class="sval" id="vCPS">0.0</span>
+          <span class="ssub" id="vCPSsub">—</span>
         </div>
+        <div class="sc">
+          <span class="slbl" data-t="accLabel">ТОЧНОСТЬ</span>
+          <span class="sval" id="vAcc">—</span>
+          <span class="ssub" data-t="accSub">равномерность</span>
+        </div>
+        <div class="sc">
+          <span class="slbl" data-t="stabLabel">СТАБИЛЬНОСТЬ</span>
+          <span class="sval" id="vStab">—</span>
+          <span class="ssub" data-t="stabSub">отклонение</span>
+        </div>
+      </div>
+
+      <div class="gwrap">
+        <canvas id="clickChart"></canvas>
+        <div class="ginfo" id="ginfo">▶ ОЖИДАНИЕ</div>
+      </div>
+
+      <div class="settings">
+        <div class="sbox"><span class="slbl" data-t="lblStart">СТАРТ</span><div id="bStart" class="kbtn">F3</div></div>
+        <div class="sbox"><span class="slbl" data-t="lblK1">КЛАВИША 1</span><div id="bK1" class="kbtn">SPACE</div></div>
+        <div class="sbox"><span class="slbl" data-t="lblK2">КЛАВИША 2</span><div id="bK2" class="kbtn">L</div></div>
+        <div class="sbox"><span class="slbl" data-t="lblInt">ИНТЕРВАЛ мс</span><input type="number" id="inInt" class="inp" value="400"></div>
+        <div class="sbox"><span class="slbl" data-t="lblHold">УДЕРЖАНИЕ мс</span><input type="number" id="inHold" class="inp" value="80"></div>
+      </div>
     </div>
 
-    <div class="coach-panel">
-        <div class="coach-title">CRITICAL ANALYZER</div>
-        <div id="coachText" class="coach-msg">Ожидание запуска. Посмотрим, на что ты способен...</div>
-        
-        <div class="raw-data" id="rawData">
-            <div class="raw-line"><span>Ratio L/R:</span> <span id="rRatio">0/0</span></div>
-            <div class="raw-line"><span>Avg Hold:</span> <span id="rHold">0ms</span></div>
-            <div class="raw-line"><span>Jitter:</span> <span id="rJitter">0ms</span></div>
-            <div class="raw-line"><span>Misses:</span> <span id="rMiss">0</span></div>
+    <div class="coach">
+      <div class="coach-hd">
+        <div class="cdot" id="cdot"></div>
+        <div class="ctitle" data-t="coachTitle">АНАЛИЗ</div>
+      </div>
+      <div class="cbody">
+        <div class="vbox">
+          <span class="vtag" data-t="verdictTag">ВЕРДИКТ</span>
+          <div id="coachTxt">Ожидание запуска...</div>
         </div>
+
+        <div class="sec-lbl" data-t="secMetrics">МЕТРИКИ</div>
+        <div class="mgrid">
+          <div class="mitem"><span class="mlbl" data-t="mHold">Удержание</span><div class="mval"><span id="rHold">—</span><span id="rHoldB"></span></div></div>
+          <div class="mitem"><span class="mlbl" data-t="mJitter">Джиттер</span><div class="mval"><span id="rJitter">—</span><span id="rJitterB"></span></div></div>
+          <div class="mitem"><span class="mlbl" data-t="mRatio">Баланс</span><div class="mval"><span id="rRatio">—</span></div></div>
+          <div class="mitem"><span class="mlbl" data-t="mMiss">Промахи</span><div class="mval"><span id="rMiss">0</span><span id="rMissB"></span></div></div>
+          <div class="mitem"><span class="mlbl" data-t="mPeak">Пик CPS</span><div class="mval"><span id="rPeak">—</span></div></div>
+          <div class="mitem"><span class="mlbl" data-t="mStreak">Серия</span><div class="mval"><span id="rStreak">0</span></div></div>
+        </div>
+
+        <div class="sec-lbl" data-t="secTips">СОВЕТЫ</div>
+        <div class="tips-list" id="tipsList"><div class="tip" data-t="tipWait">Нажмите старт для начала теста...</div></div>
+
+        <div class="gbox" id="gradeBox">
+          <span class="slbl" data-t="gradeTitle">ОЦЕНКА</span>
+          <div class="gval" id="gradeVal">—</div>
+          <div class="gdesc" id="gradDesc"></div>
+          <div class="gscore" id="gradScore"></div>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 
 <script>
-    /** --- BACKGROUND ENGINE --- **/
-    const tScene = new THREE.Scene();
-    const tCam = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-    const tRenderer = new THREE.WebGLRenderer({ canvas: document.getElementById('three-canvas'), antialias: true });
-    tRenderer.setSize(window.innerWidth, window.innerHeight);
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r){
+    r=Math.min(r,w/2,h/2);
+    this.beginPath();
+    this.moveTo(x+r,y); this.lineTo(x+w-r,y);
+    this.arcTo(x+w,y,x+w,y+r,r); this.lineTo(x+w,y+h-r);
+    this.arcTo(x+w,y+h,x+w-r,y+h,r); this.lineTo(x+r,y+h);
+    this.arcTo(x,y+h,x,y+h-r,r); this.lineTo(x,y+r);
+    this.arcTo(x,y,x+r,y,r); this.closePath(); return this;
+  };
+}
 
-    const joints = [];
-    const geom = new THREE.IcosahedronGeometry(1, 0);
-    for(let i=0; i<30; i++) {
-        const mat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.1 });
-        const m = new THREE.Mesh(geom, mat);
-        m.position.set((Math.random()-0.5)*60, (Math.random()-0.5)*60, -Math.random()*100);
-        m.userData = { spd: 0.1 + Math.random()*0.2 };
-        tScene.add(m); joints.push(m);
-    }
-    tCam.position.z = 20;
+const T = {
+  ru:{
+    modeNormal:'ОБЫЧНЫЙ', modeRhythm:'РИТМ',
+    cpsLabel:'CPS', accLabel:'ТОЧНОСТЬ', stabLabel:'СТАБИЛЬНОСТЬ',
+    accSub:'равномерность', stabSub:'отклонение',
+    lblStart:'СТАРТ', lblK1:'КЛАВИША 1', lblK2:'КЛАВИША 2',
+    lblInt:'ИНТЕРВАЛ мс', lblHold:'УДЕРЖАНИЕ мс',
+    coachTitle:'АНАЛИЗ', verdictTag:'ВЕРДИКТ',
+    secMetrics:'МЕТРИКИ', secTips:'СОВЕТЫ', gradeTitle:'ОЦЕНКА',
+    mHold:'Удержание', mJitter:'Джиттер', mRatio:'Баланс',
+    mMiss:'Промахи', mPeak:'Пик CPS', mStreak:'Серия',
+    tipWait:'Нажмите старт для начала теста...',
+    pressKey:'— НАЖМИТЕ —', ginfo_wait:'▶ ОЖИДАНИЕ', ginfo_rec:'● ЗАПИСЬ',
+    boostTxt:'БУСТ', go:'ВПЕРЁД!',
+    peak:'пик', total:'всего',
+    dur:['5с','10с','30с','∞'],
+  },
+  en:{
+    modeNormal:'NORMAL', modeRhythm:'RHYTHM',
+    cpsLabel:'CPS', accLabel:'ACCURACY', stabLabel:'STABILITY',
+    accSub:'consistency', stabSub:'deviation',
+    lblStart:'START', lblK1:'KEY 1', lblK2:'KEY 2',
+    lblInt:'INTERVAL ms', lblHold:'HOLD ms',
+    coachTitle:'ANALYSIS', verdictTag:'VERDICT',
+    secMetrics:'METRICS', secTips:'TIPS', gradeTitle:'GRADE',
+    mHold:'Avg Hold', mJitter:'Jitter', mRatio:'Balance',
+    mMiss:'Misses', mPeak:'Peak CPS', mStreak:'Streak',
+    tipWait:'Press start to begin...',
+    pressKey:'— PRESS —', ginfo_wait:'▶ WAITING', ginfo_rec:'● RECORDING',
+    boostTxt:'BOOST', go:'GO!',
+    peak:'peak', total:'total',
+    dur:['5s','10s','30s','∞'],
+  }
+};
 
-    function animBackground() {
-        requestAnimationFrame(animBackground);
-        joints.forEach(j => {
-            j.rotation.x += 0.01; j.rotation.y += 0.01;
-            j.position.z += j.userData.spd;
-            if(j.position.z > 20) j.position.z = -100;
-        });
-        tRenderer.render(tScene, tCam);
-    }
-    animBackground();
+const TIPS = {
+  ru:[
+    [c=>c.hold>0&&c.hold<28,      '⚡ Слишком короткий клик — оптимально 40–120мс'],
+    [c=>c.hold>200,               '⏳ Длительное удержание снижает частоту кликов'],
+    [c=>c.jitter>38&&c.n>12,      '🎯 Ритм хаотичен — старайтесь кликать равномернее'],
+    [c=>c.cps<5&&c.cps>0,         '💪 Уменьшите амплитуду движения пальца'],
+    [c=>c.unbal,                  '⚖️ Тренируйте слабую руку отдельно'],
+    [c=>c.misses>4,               '🎯 Снизьте темп для улучшения точности'],
+    [c=>c.stab>=85&&c.cps<7,      '✅ Стабильность хорошая, теперь можно повышать скорость'],
+    [c=>c.boost,                  '🔥 РЕЖИМ БУСТА — сохраняйте ритмичность'],
+    [()=>true,                    '🧘 Дышите ровно, задержка дыхания нарушает ритм'],
+    [()=>true,                    '🔥 Разогрейте пальцы: 30 секунд свободных кликов'],
+    [()=>true,                    '🦋 Баттерфляй: чередуйте два пальца с одинаковой силой'],
+    [()=>true,                    '⚡ Джиттер-клик: расслабьте запястье, используйте микровибрации'],
+    [()=>true,                    '👆 Кончик пальца или подушечка — разница до 1 CPS'],
+    [()=>true,                    '😤 Напряжение в руке снижает скорость, расслабляйтесь'],
+  ],
+  en:[
+    [c=>c.hold>0&&c.hold<28,      '⚡ Click too short — aim for 40–120ms'],
+    [c=>c.hold>200,               '⏳ Long holds reduce CPS — release faster'],
+    [c=>c.jitter>38&&c.n>12,      '🎯 Chaotic rhythm — focus on steady intervals'],
+    [c=>c.cps<5&&c.cps>0,         '💪 Reduce finger travel distance'],
+    [c=>c.unbal,                  '⚖️ Train weaker hand separately'],
+    [c=>c.misses>4,               '🎯 Slow down slightly to improve accuracy'],
+    [c=>c.stab>=85&&c.cps<7,      '✅ Good stability, now gradually increase speed'],
+    [c=>c.boost,                  '🔥 BOOST MODE — maintain steady rhythm'],
+    [()=>true,                    '🧘 Breathe steadily — breath holding disrupts rhythm'],
+    [()=>true,                    '🔥 Warm up: 30 seconds of loose clicking'],
+    [()=>true,                    '🦋 Butterfly: alternate two fingers with equal force'],
+    [()=>true,                    '⚡ Jitter click: relax wrist, use subtle vibrations'],
+    [()=>true,                    '👆 Fingertip vs pad — difference up to 1 CPS'],
+    [()=>true,                    '😤 Reduce hand tension — tension kills speed'],
+  ]
+};
 
-    /** --- LOGIC --- **/
-    let state = {
-        active: false, mode: 'normal', hands: 'one',
-        keys: { start: 'F3', left: ' ', right: 'l' },
-        targets: [], clicks: [],
-        startT: 0, curDur: 10000,
-        held: { left: false, right: false },
-        analysis: { late: 0, early: 0, hits: 0, total: 0, misses: 0 }
-    };
+const VERDICTS = {
+  ru:{
+    wait:'Ожидание запуска. Нажмите старт.',
+    active:'Запись идёт, кликайте.',
+    boost:'🔥 РЕЖИМ БУСТА: высокая скорость и стабильность.',
+    shortHold:'Клики слишком короткие, могут не регистрироваться.',
+    longHold:'Длительное удержание снижает частоту кликов.',
+    highJitter:'Ритм хаотичен, старайтесь кликать равномернее.',
+    unbalanced:'Дисбаланс между руками, тренируйте слабую руку.',
+    goodRhythm:'Ритм стабилен, теперь можно повышать скорость.',
+    perfect:'Идеальная стабильность и точность.',
+    great:'Отличная работа, можно увеличить скорость.',
+    avg:'Средний результат, работайте над ритмом.',
+    bad:'Низкая скорость и нестабильный ритм. Нужна тренировка.',
+  },
+  en:{
+    wait:'Waiting. Press start.',
+    active:'Recording active. Click.',
+    boost:'🔥 BOOST MODE: high speed and stability.',
+    shortHold:'Clicks too short — may not register.',
+    longHold:'Long holds reduce click frequency.',
+    highJitter:'Chaotic rhythm — aim for steadier timing.',
+    unbalanced:'Hand imbalance — train weaker hand.',
+    goodRhythm:'Stable rhythm, now work on speed.',
+    perfect:'Perfect stability and accuracy.',
+    great:'Great work, increase speed gradually.',
+    avg:'Average result, work on rhythm.',
+    bad:'Low speed and unstable rhythm. Practice needed.',
+  }
+};
 
-    const canvas = document.getElementById('clickChart');
-    const ctx = canvas.getContext('2d');
+const GRADES = {
+  ru:[[97,'S','ЭЛИТА'],[92,'A+','МАСТЕР'],[85,'A','ОТЛИЧНО'],[78,'B+','ХОРОШО'],[70,'B','ВЫШЕ СРЕДНЕГО'],[60,'C','СРЕДНЕ'],[50,'D','НУЖНА ТРЕНИРОВКА'],[0,'F','НАЧНИТЕ СНАЧАЛА']],
+  en:[[97,'S','ELITE'],[92,'A+','MASTER'],[85,'A','EXCELLENT'],[78,'B+','VERY GOOD'],[70,'B','ABOVE AVERAGE'],[60,'C','AVERAGE'],[50,'D','NEEDS PRACTICE'],[0,'F','START OVER']]
+};
 
-    let bindTarget = null;
-    document.querySelectorAll('.k-btn').forEach(b => {
-        b.onclick = () => { bindTarget = b.id; b.classList.add('waiting'); b.innerText = "PRESS KEY"; };
+const tScene=new THREE.Scene();
+const tCam=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.1,1000);
+const tRend=new THREE.WebGLRenderer({canvas:document.getElementById('three-canvas'),antialias:true,alpha:true});
+tRend.setSize(innerWidth,innerHeight);
+tRend.setClearColor(0x000000,0);
+const geos=[new THREE.IcosahedronGeometry(1,0),new THREE.OctahedronGeometry(1,0),new THREE.TetrahedronGeometry(1,0)];
+const bgMeshes=[];
+for(let i=0;i<24;i++){
+  const mat=new THREE.MeshBasicMaterial({color:0x00c8ff,wireframe:true,transparent:true,opacity:.04+Math.random()*.1});
+  const mesh=new THREE.Mesh(geos[i%3],mat);
+  const s=.4+Math.random()*1.8;
+  mesh.scale.set(s,s,s);
+  mesh.position.set((Math.random()-.5)*85,(Math.random()-.5)*65,-8-Math.random()*95);
+  mesh.userData={rx:(Math.random()-.5)*.018,ry:(Math.random()-.5)*.018,spd:.05+Math.random()*.15,opa:mat.opacity};
+  tScene.add(mesh); bgMeshes.push(mesh);
+}
+tCam.position.z=20;
+let bgBoost=false,bgT=0,bgPulse=0;
+function bgLoop(){
+  requestAnimationFrame(bgLoop);
+  bgPulse+=.03;
+  bgT=Math.min(1,Math.max(0,bgT+(bgBoost?.018:-.018)));
+  const t=bgT;
+  const cr=Math.round(0+(255-0)*t),cg=Math.round(200+(140-200)*t),cb=Math.round(255+(0-255)*t);
+  const col=new THREE.Color(`rgb(${cr},${cg},${cb})`);
+  const kb=bgBoost?(1+Math.sin(bgPulse)*.25):1;
+  bgMeshes.forEach(m=>{
+    m.rotation.x+=m.userData.rx*kb; m.rotation.y+=m.userData.ry*kb;
+    m.position.z+=m.userData.spd*kb;
+    if(m.position.z>22)m.position.z=-92;
+    m.material.color=col;
+    m.material.opacity=m.userData.opa*(bgBoost?1.4:1);
+  });
+  tRend.render(tScene,tCam);
+}
+bgLoop();
+
+let lang='ru', theme='dark';
+const S={
+  active:false, mode:'normal',
+  keys:{start:'F3',k1:' ',k2:'l'},
+  targets:[],clicks:[],
+  startT:0, curDur:10000,
+  held:{k1:false,k2:false},
+  analysis:{hits:0,total:0,misses:0},
+  peakCPS:0, bestStreak:0, boost:false,
+};
+
+let testTimeout = null;
+let countdownInterval = null;
+
+const ch=document.getElementById('clickChart');
+const cx=ch.getContext('2d');
+
+function getCPS(){
+  if(!S.active||!S.clicks.length)return 0;
+  const el=(performance.now()-S.startT)/1000;
+  return el>0?S.clicks.length/el:0;
+}
+function getIntervals(){
+  if(S.clicks.length<3)return[];
+  const ivs=[];
+  for(let i=1;i<S.clicks.length;i++)ivs.push(S.clicks[i].start-S.clicks[i-1].start);
+  return ivs;
+}
+function getAccuracy(){
+  if(S.mode==='line'){
+    if(!S.analysis.total)return null;
+    return Math.round(S.analysis.hits/S.analysis.total*100);
+  }
+  const ivs=getIntervals();
+  if(ivs.length<4)return null;
+  const avg=ivs.reduce((a,b)=>a+b,0)/ivs.length;
+  const good=ivs.filter(iv=>Math.abs(iv-avg)<=avg*.2).length;
+  return Math.round(good/ivs.length*100);
+}
+function getStability(){
+  const ivs=getIntervals();
+  if(ivs.length<4)return null;
+  const avg=ivs.reduce((a,b)=>a+b,0)/ivs.length;
+  const jitter=Math.sqrt(ivs.reduce((a,b)=>a+Math.pow(b-avg,2),0)/ivs.length);
+  return Math.max(0,Math.min(100,Math.round(100-jitter*1.15)));
+}
+function getJitter(){
+  const ivs=getIntervals();
+  if(ivs.length<4)return 0;
+  const avg=ivs.reduce((a,b)=>a+b,0)/ivs.length;
+  return Math.sqrt(ivs.reduce((a,b)=>a+Math.pow(b-avg,2),0)/ivs.length);
+}
+function getAvgHold(){
+  const done=S.clicks.filter(c=>c.end!==null);
+  if(!done.length)return 0;
+  return done.reduce((a,b)=>a+(b.end-b.start),0)/done.length;
+}
+function getBestStreak(){
+  const ivs=getIntervals();
+  if(ivs.length<3)return 0;
+  const avg=ivs.reduce((a,b)=>a+b,0)/ivs.length;
+  const thr=avg*.18;
+  let best=0,cur=0;
+  for(const iv of ivs){Math.abs(iv-avg)<=thr?(cur++,best=Math.max(best,cur)):cur=0;}
+  return best;
+}
+function calcGrade(cps,stab,acc){
+  const s=(stab||0)*.38+(acc!==null?acc:50)*.32+Math.min(100,cps/12*100)*.30;
+  const list=GRADES[lang];
+  for(const [th,letter,desc]of list)if(s>=th)return{letter,desc,score:Math.round(s)};
+  return{letter:'F',desc:GRADES[lang][GRADES[lang].length-1][2],score:0};
+}
+function holdBadge(ms){
+  if(!ms)return'';
+  if(ms<25)return'<span class="badge r">'+(lang==='ru'?'КОРОТКО':'SHORT')+'</span>';
+  if(ms>200)return'<span class="badge y">'+(lang==='ru'?'ДОЛГО':'LONG')+'</span>';
+  if(ms>=40&&ms<=120)return'<span class="badge g">OK</span>';
+  return'<span class="badge y">'+(lang==='ru'?'НОРМ':'NORM')+'</span>';
+}
+function jitterBadge(ms){
+  if(!ms)return'';
+  if(ms<10)return'<span class="badge g">'+(lang==='ru'?'ИДЕАЛ':'IDEAL')+'</span>';
+  if(ms<20)return'<span class="badge g">GOOD</span>';
+  if(ms<40)return'<span class="badge y">OK</span>';
+  return'<span class="badge r">'+(lang==='ru'?'ХАОС':'CHAOS')+'</span>';
+}
+
+function checkBoost(){
+  if(!S.active)return;
+  const el=(performance.now()-S.startT)/1000;
+  if(el<4)return;
+  const cps=getCPS(),stab=getStability();
+  const should=cps>=8&&stab!==null&&stab>=80&&S.clicks.length>=20;
+  if(should&&!S.boost){
+    S.boost=true;
+    document.body.classList.add('boost');
+    bgBoost=true;
+    document.getElementById('boostPill').innerHTML='🔥 '+T[lang].boostTxt;
+    const banner=document.getElementById('boostBanner');
+    document.getElementById('boostTxt').textContent=T[lang].boostTxt;
+    banner.classList.remove('flash');
+    void banner.offsetWidth;
+    banner.classList.add('flash');
+    setTimeout(()=>banner.classList.remove('flash'),1700);
+  } else if(!should&&S.boost){
+    S.boost=false;
+    document.body.classList.remove('boost');
+    bgBoost=false;
+  }
+}
+
+function getTips(ctx){
+  const pool=TIPS[lang];
+  const out=[];
+  for(const[pred,txt]of pool){
+    if(out.length>=3)break;
+    if(pred(ctx))out.push(txt);
+  }
+  return out;
+}
+function getVerdict(ctx,finished){
+  const V=VERDICTS[lang];
+  if(!S.active&&!finished)return V.wait;
+  if(S.boost)return V.boost;
+  if(finished){
+    if(ctx.stab>=90&&ctx.cps>=9)return V.perfect;
+    if(ctx.stab>=75&&ctx.cps>=6)return V.great;
+    if(ctx.cps>=3)return V.avg;
+    return V.bad;
+  }
+  if(ctx.hold>0&&ctx.hold<28)return V.shortHold;
+  if(ctx.hold>200)return V.longHold;
+  if(ctx.jitter>40&&S.clicks.length>12)return V.highJitter;
+  if(ctx.unbal)return V.unbalanced;
+  if(ctx.stab>=80)return V.goodRhythm;
+  return V.active;
+}
+
+function update(finished=false){
+  const cps=getCPS();
+  const stab=getStability();
+  const acc=getAccuracy();
+  const jitter=getJitter();
+  const hold=getAvgHold();
+  const k1=S.clicks.filter(c=>c.hand==='k1').length;
+  const k2=S.clicks.filter(c=>c.hand==='k2').length;
+  const total=k1+k2;
+  const unbal=k1>0&&k2>0&&Math.abs(k1-k2)/(k1+k2)>.28;
+  const streak=getBestStreak();
+  if(cps>S.peakCPS)S.peakCPS=cps;
+
+  document.getElementById('vCPS').textContent=cps>0?cps.toFixed(1):'0.0';
+  document.getElementById('vCPSsub').textContent=S.peakCPS>0?`${T[lang].peak}: ${S.peakCPS.toFixed(1)}  ${T[lang].total}: ${total}`:'—';
+  document.getElementById('vAcc').textContent=acc!==null?acc+'%':'—';
+  document.getElementById('vStab').textContent=stab!==null?stab+'%':'—';
+  document.getElementById('rHold').textContent=hold>0?Math.round(hold)+'ms':'—';
+  document.getElementById('rHoldB').innerHTML=hold>0?holdBadge(hold):'';
+  document.getElementById('rJitter').textContent=jitter>0?Math.round(jitter)+'ms':'—';
+  document.getElementById('rJitterB').innerHTML=jitter>0?jitterBadge(jitter):'';
+  document.getElementById('rRatio').textContent=k2>0?`${k1} / ${k2}`:(k1||'—');
+  document.getElementById('rMiss').textContent=S.analysis.misses;
+  document.getElementById('rMissB').innerHTML=S.analysis.misses>5?'<span class="badge r">!</span>':'';
+  document.getElementById('rPeak').textContent=S.peakCPS>0?S.peakCPS.toFixed(1):'—';
+  document.getElementById('rStreak').textContent=streak||0;
+
+  const ctx={cps,stab:stab||0,acc,hold,jitter,unbal,misses:S.analysis.misses,boost:S.boost,n:S.clicks.length};
+  document.getElementById('coachTxt').textContent=getVerdict(ctx,finished);
+  const tips=getTips(ctx);
+  document.getElementById('tipsList').innerHTML=tips.length?tips.map(t=>`<div class="tip">${t}</div>`).join(''):`<div class="tip">${T[lang].tipWait}</div>`;
+
+  if(finished&&S.clicks.length>5){
+    const g=calcGrade(S.peakCPS,stab||0,acc);
+    document.getElementById('gradeVal').textContent=g.letter;
+    document.getElementById('gradDesc').textContent=g.desc;
+    document.getElementById('gradScore').textContent=`score: ${g.score}/100`;
+    document.getElementById('gradeBox').classList.add('show');
+  }
+  checkBoost();
+}
+
+function genTargets(){
+  S.targets=[];
+  const iv=parseInt(document.getElementById('inInt').value)||400;
+  const durHold=parseInt(document.getElementById('inHold').value)||80;
+  const lim=S.curDur===0?60000:S.curDur;
+  let t=1000;
+  while(t<lim-500){
+    S.targets.push({
+      t: t,
+      dur: durHold,
+      hand: S.targets.length%2===0?'k1':'k2',
+      hit: false,
+      holdOk: false
     });
+    t+=iv;
+  }
+}
 
-    window.addEventListener('keydown', (e) => {
-        if(bindTarget) {
-            const map = { bStart: 'start', bLeft: 'left', bRight: 'right' };
-            state.keys[map[bindTarget]] = e.key;
-            document.getElementById(bindTarget).innerText = e.key === ' ' ? 'SPACE' : e.key.toUpperCase();
-            document.getElementById(bindTarget).classList.remove('waiting');
-            bindTarget = null; return;
-        }
-        if(e.key === state.keys.start) { state.active ? stopTest() : startCountdown(); return; }
-        if(state.active) {
-            if(e.key === state.keys.left && !state.held.left) { press('left'); state.held.left = true; }
-            if(state.hands === 'two' && e.key === state.keys.right && !state.held.right) { press('right'); state.held.right = true; }
-        }
+function startCountdown(){
+  if(S.active) return;
+  if(countdownInterval) clearInterval(countdownInterval);
+  if(testTimeout) clearTimeout(testTimeout);
+  const sv=parseInt(document.getElementById('durSel').value);
+  S.curDur=sv===0?0:sv*1000;
+  if(S.mode==='line')genTargets();
+  const div=document.createElement('div');
+  div.className='countdown';
+  div.innerHTML=`<div class="cdnum">3</div><div class="cdsub">${S.mode==='line'?T[lang].modeRhythm:T[lang].modeNormal}</div>`;
+  document.body.appendChild(div);
+  let c=3;
+  countdownInterval = setInterval(()=>{
+    c--;
+    if(c>0){div.querySelector('.cdnum').textContent=c;}
+    else if(c===0){const n=div.querySelector('.cdnum');n.textContent=T[lang].go;n.style.color='#00ffaa';}
+    else{clearInterval(countdownInterval); countdownInterval=null; div.remove(); doStart();}
+  },700);
+}
+function doStart(){
+  if(testTimeout) clearTimeout(testTimeout);
+  S.clicks=[];S.active=true;S.startT=performance.now();
+  S.analysis={hits:0,total:0,misses:0};
+  S.peakCPS=0;S.boost=false;
+  document.body.classList.remove('boost');bgBoost=false;
+  document.getElementById('gradeBox').classList.remove('show');
+  document.getElementById('ginfo').textContent=T[lang].ginfo_rec;
+  const dot=document.getElementById('cdot');
+  dot.style.background='#00ffaa';dot.style.boxShadow='0 0 8px #00ffaa';
+  if(S.curDur>0){
+    testTimeout = setTimeout(()=>{
+      if(S.active) doStop();
+    }, S.curDur);
+  }
+}
+function doStop(){
+  if(testTimeout){clearTimeout(testTimeout); testTimeout=null;}
+  if(!S.active) return;
+  S.active=false;
+  document.body.classList.remove('boost');bgBoost=false;
+  document.getElementById('ginfo').textContent=T[lang].ginfo_wait;
+  const dot=document.getElementById('cdot');
+  dot.style.background='var(--err)';dot.style.boxShadow='0 0 8px var(--err)';
+  update(true);
+}
+
+let bindTarget=null;
+let mousePos={x:innerWidth/2,y:innerHeight*.5};
+window.addEventListener('mousemove',e=>{mousePos={x:e.clientX,y:e.clientY};});
+document.querySelectorAll('.kbtn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    if(S.active)return;
+    bindTarget=b.id; b.classList.add('waiting');
+    b.textContent=T[lang].pressKey;
+  });
+});
+window.addEventListener('keydown',e=>{
+  if(e.repeat)return;
+  if(bindTarget){
+    const map={bStart:'start',bK1:'k1',bK2:'k2'};
+    const key=map[bindTarget];
+    if(key){
+      S.keys[key]=e.key;
+      document.getElementById(bindTarget).textContent=e.key===' '?'SPACE':e.key.toUpperCase();
+      document.getElementById(bindTarget).classList.remove('waiting');
+    }
+    bindTarget=null; return;
+  }
+  if(e.key===S.keys.start){e.preventDefault(); S.active?doStop():startCountdown(); return;}
+  if(e.key===S.keys.k1&&!S.held.k1){e.preventDefault(); S.held.k1=true; doPress('k1');}
+  if(e.key===S.keys.k2&&!S.held.k2){e.preventDefault(); S.held.k2=true; doPress('k2');}
+});
+window.addEventListener('keyup',e=>{
+  if(e.key===S.keys.k1){S.held.k1=false;doRelease('k1');}
+  if(e.key===S.keys.k2){S.held.k2=false;doRelease('k2');}
+});
+function doPress(hand){
+  if(!S.active)return;
+  const now=performance.now()-S.startT;
+  const clickObj={start:now,end:null,hand};
+  S.clicks.push(clickObj);
+  if(S.mode==='line'){
+    const tg=S.targets.find(t=>!t.hit && Math.abs(t.t-now) < 220);
+    if(tg && tg.hand===hand){
+      tg.hit=true;
+      S.analysis.hits++;
+    } else {
+      S.analysis.misses++;
+    }
+    S.analysis.total++;
+  }
+  update();
+}
+function doRelease(hand){
+  if(!S.active)return;
+  const now=performance.now()-S.startT;
+  const last=[...S.clicks].reverse().find(c=>c.hand===hand&&c.end===null);
+  if(last){
+    last.end=now;
+    if(S.mode==='line'){
+      const holdDur=last.end-last.start;
+      const tg=S.targets.find(t=>Math.abs(t.t-last.start)<220 && t.hand===hand);
+      if(tg && tg.hit){
+        const expected=tg.dur;
+        const diff=Math.abs(holdDur-expected);
+        if(diff<=expected*0.35) tg.holdOk=true;
+        else S.analysis.misses++;
+      }
+    }
+  }
+  update();
+}
+
+function drawGraph(){
+  requestAnimationFrame(drawGraph);
+  ch.width=ch.offsetWidth||800;
+  ch.height=ch.offsetHeight||300;
+  const W=ch.width,H=ch.height;
+  const isDark=theme==='dark';
+  cx.clearRect(0,0,W,H);
+  cx.fillStyle=isDark?'rgba(9,14,26,.85)':'rgba(241,247,255,.88)';
+  cx.fillRect(0,0,W,H);
+  const now=S.active?(performance.now()-S.startT):(S.clicks.length>0?S.clicks[S.clicks.length-1].start+600:1200);
+  const vm=3500;
+  const cX=W/2;
+  const gX=t=>cX+(t-now)*(W/vm);
+  const tHold=parseInt(document.getElementById('inHold').value)||80;
+  const acc=S.boost?'#ffb300':(isDark?'#00c8ff':'#0066cc');
+  cx.strokeStyle=isDark?'rgba(255,255,255,.04)':'rgba(0,0,0,.06)';
+  cx.lineWidth=1;
+  const giv=500,gS=Math.floor((now-vm*.65)/giv)*giv;
+  for(let t=gS;t<=now+vm*.55;t+=giv){
+    const x=gX(t);
+    cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,H);cx.stroke();
+    if(S.active&&x>20&&x<W-20){
+      cx.fillStyle=isDark?'rgba(255,255,255,.18)':'rgba(0,0,0,.18)';
+      cx.font='9px Consolas,monospace';
+      cx.fillText((t/1000).toFixed(1)+'s',x+3,H-5);
+    }
+  }
+  cx.strokeStyle=isDark?'rgba(255,255,255,.04)':'rgba(0,0,0,.05)';
+  cx.setLineDash([4,9]);
+  cx.beginPath();cx.moveTo(0,H/2);cx.lineTo(W,H/2);cx.stroke();
+  cx.setLineDash([]);
+  if(S.clicks.some(c=>c.hand==='k2')){
+    const lc=isDark?'rgba(255,68,102,.35)':'rgba(200,0,50,.3)';
+    const rc=isDark?'rgba(68,255,170,.35)':'rgba(0,130,70,.3)';
+    cx.font='bold 9px Consolas,monospace';
+    cx.fillStyle=lc; cx.fillText('K1',4,H/2-8);
+    cx.fillStyle=rc; cx.fillText('K2',4,H/2+18);
+  }
+  const bH=Math.min(38,H*.11);
+  const bY1=H/2-bH-5, bY2=H/2+5;
+  
+  if(S.mode==='line'){
+    S.targets.forEach(t=>{
+      const x1=gX(t.t);
+      const x2=gX(t.t+t.dur);
+      if((x2< -60)||(x1>W+60))return;
+      const y=t.hand==='k1'?bY1:bY2;
+      let fillColor;
+      if(t.hit && t.holdOk) fillColor=isDark?'rgba(100,255,100,0.55)':'rgba(0,180,80,0.6)';
+      else if(t.hit) fillColor=isDark?'rgba(255,200,50,0.55)':'rgba(200,140,0,0.55)';
+      else fillColor=isDark?'rgba(255,70,100,0.35)':'rgba(200,40,70,0.45)';
+      cx.fillStyle=fillColor;
+      const w=Math.max(2,x2-x1);
+      cx.roundRect(Math.max(0,x1),y,w,bH,4);
+      cx.fill();
+      cx.strokeStyle=isDark?'#ffffff66':'#00000066';
+      cx.lineWidth=1;
+      cx.roundRect(Math.max(0,x1),y,w,bH,4);
+      cx.stroke();
     });
-
-    window.addEventListener('keyup', (e) => {
-        if(!state.active) return;
-        if(e.key === state.keys.left) { release('left'); state.held.left = false; }
-        if(state.hands === 'two' && e.key === state.keys.right) { release('right'); state.held.right = false; }
-    });
-
-    function startCountdown() {
-        let c = 3;
-        const div = document.createElement('div'); div.className = 'countdown'; document.body.appendChild(div);
-        const selVal = parseInt(document.getElementById('durSel').value);
-        state.curDur = selVal === 0 ? 0 : selVal * 1000;
-        if(state.mode === 'line') generateTargets();
-        const t = setInterval(() => {
-            div.innerText = c > 0 ? c : "GO!";
-            if(c === -1) { clearInterval(t); div.remove(); startTest(); }
-            c--;
-        }, 800);
-    }
-
-    function generateTargets() {
-        state.targets = [];
-        const interval = parseInt(document.getElementById('inInt').value) || 400;
-        const h = parseInt(document.getElementById('inHold').value) || 80;
-        const limit = state.curDur === 0 ? 60000 : state.curDur;
-        let t = 1000;
-        while(t < limit - 500) {
-            state.targets.push({ t, dur: h, hand: state.hands === 'two' ? (state.targets.length % 2 ? 'right' : 'left') : 'left', hit: false });
-            t += interval;
-        }
-    }
-
-    function startTest() {
-        state.clicks = []; state.active = true; state.startT = performance.now();
-        state.analysis = { late: 0, early: 0, hits: 0, total: 0, misses: 0 };
-        if(state.curDur > 0) setTimeout(() => { if(state.active) stopTest(); }, state.curDur);
-    }
-
-    function stopTest() { state.active = false; analyzeGame(true); }
-
-    function press(hand) {
-        const now = performance.now() - state.startT;
-        state.clicks.push({ start: now, end: null, hand });
-        if(state.mode === 'line') {
-            const target = state.targets.find(t => !t.hit && Math.abs(t.t - now) < 200);
-            if(target && (state.hands === 'one' || target.hand === hand)) {
-                target.hit = true; state.analysis.hits++;
-            } else { state.analysis.misses++; }
-            state.analysis.total++;
-        }
-        analyzeGame();
-    }
-
-    function release(hand) {
-        const now = performance.now() - state.startT;
-        const last = state.clicks.slice().reverse().find(c => c.hand === hand && c.end === null);
-        if(last) last.end = now;
-        analyzeGame();
-    }
-
-    function analyzeGame(finished = false) {
-        const now = performance.now() - state.startT;
-        const lClicks = state.clicks.filter(c => c.hand === 'left').length;
-        const rClicks = state.clicks.filter(c => c.hand === 'right').length;
-        const total = lClicks + rClicks;
-
-        // Stats UI
-        document.getElementById('vCPS').innerText = (total / (now/1000)).toFixed(1);
-        document.getElementById('rRatio').innerText = `${lClicks} / ${rClicks}`;
-        
-        // Stability calculation (Stricter)
-        let stability = 0;
-        if(state.clicks.length > 5) {
-            const ivs = [];
-            for(let i=1; i<state.clicks.length; i++) ivs.push(state.clicks[i].start - state.clicks[i-1].start);
-            const avg = ivs.reduce((a,b)=>a+b,0) / ivs.length;
-            const jitter = Math.sqrt(ivs.reduce((a,b)=>a+Math.pow(b-avg,2),0) / ivs.length);
-            document.getElementById('rJitter').innerText = Math.round(jitter) + 'ms';
-            stability = Math.max(0, 100 - (jitter / 0.8)); // Harder threshold
-        }
-        document.getElementById('vStab').innerText = Math.round(stability) + '%';
-
-        // Hold duration
-        const finishedClicks = state.clicks.filter(c => c.end !== null);
-        const avgHold = finishedClicks.length ? finishedClicks.reduce((a,b)=>a+(b.end-b.start),0)/finishedClicks.length : 0;
-        document.getElementById('rHold').innerText = Math.round(avgHold) + 'ms';
-
-        // Coach Harsh Messages
-        const coach = document.getElementById('coachText');
-        let msg = "";
-        
-        if(state.hands === 'two' && total > 10) {
-            const diff = Math.abs(lClicks - rClicks) / total;
-            if(diff > 0.25) msg += "Ужасный баланс рук! Одна рука ленится. ";
-        }
-        if(avgHold > 0 && avgHold < 40) msg += "Слишком короткие клики, система их не засчитает. ";
-        if(avgHold > 200) msg += "Ты слишком долго держишь клавишу, тормозишь CPS. ";
-        if(stability < 60 && total > 10) msg += "Твой ритм полностью разбит. Ты кликаешь как в лихорадке. ";
-        
-        if(finished && stability > 90 && lClicks === rClicks) msg = "Идеально. Ты машина.";
-        else if(!msg) msg = "Пока терпимо. Но старайся лучше.";
-        
-        coach.innerText = msg;
-    }
-
-    function draw() {
-        canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
-        ctx.clearRect(0,0,canvas.width, canvas.height);
-        
-        const now = state.active ? (performance.now() - state.startT) : 0;
-        const viewMs = 3000;
-        const centerX = canvas.width / 2;
-        const getX = (t) => centerX + (t - now) * (canvas.width / viewMs);
-
-        // Grid
-        ctx.strokeStyle = '#111';
-        for(let i=-10; i<10; i++) {
-            const gx = getX(Math.floor(now/500)*500 + i*500);
-            ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, canvas.height); ctx.stroke();
-        }
-
-        // Targets (Line mode)
-        if (state.mode === 'line') {
-            state.targets.forEach(t => {
-                const x = getX(t.t);
-                if(x < -50 || x > canvas.width + 50) return;
-                ctx.strokeStyle = t.hit ? '#222' : (t.hand === 'left' ? varColor('--left-hand') : varColor('--right-hand'));
-                ctx.lineWidth = 3;
-                ctx.strokeRect(x, 50, 5, canvas.height - 100);
-            });
-        }
-
-        // Clicks (BRIGHT NEON)
-        state.clicks.forEach(c => {
-            const x = getX(c.start);
-            const w = (( (c.end || now) - c.start) / viewMs) * canvas.width;
-            const color = c.hand === 'left' ? '#ff3333' : '#33ff77';
-            
-            ctx.shadowBlur = 15; ctx.shadowColor = color;
-            ctx.fillStyle = color;
-            // Draw as a glowing bar
-            ctx.fillRect(x, canvas.height/2 - 20, Math.max(w, 10), 40);
-            ctx.shadowBlur = 0;
-        });
-
-        // FIXED CROSSHAIR
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 4;
-        ctx.shadowBlur = 20; ctx.shadowColor = '#0ff';
-        ctx.beginPath(); ctx.moveTo(centerX, 0); ctx.lineTo(centerX, canvas.height); ctx.stroke();
-        // Crosshair Box
-        ctx.strokeRect(centerX - 15, canvas.height/2 - 15, 30, 30);
-        ctx.shadowBlur = 0;
-
-        requestAnimationFrame(draw);
-    }
-    function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name); }
-    draw();
-
-    document.getElementById('mNormal').onclick = () => { state.mode = 'normal'; updateUI(); };
-    document.getElementById('mLine').onclick = () => { state.mode = 'line'; updateUI(); };
-    document.getElementById('hOne').onclick = () => { state.hands = 'one'; updateUI(); };
-    document.getElementById('hTwo').onclick = () => { state.hands = 'two'; updateUI(); };
-
-    function updateUI() {
-        document.getElementById('mNormal').classList.toggle('active', state.mode==='normal');
-        document.getElementById('mLine').classList.toggle('active', state.mode==='line');
-        document.getElementById('hOne').classList.toggle('active', state.hands==='one');
-        document.getElementById('hTwo').classList.toggle('active', state.hands==='two');
-        document.getElementById('boxRight').style.opacity = state.hands==='two'?'1':'0.2';
-        document.getElementById('boxRight').style.pointerEvents = state.hands==='two'?'all':'none';
-        state.active = false;
-    }
+  }
+  S.clicks.forEach(c=>{
+    const x=gX(c.start);
+    if(x>W+60||x<-120)return;
+    const endT=c.end||now;
+    const w=Math.max(6,((endT-c.start)/vm)*W);
+    let color=S.boost?'#ffb300':(c.hand==='k1'?'#ff4466':'#44ffaa');
+    if(c.end&&(c.end-c.start)<20)color='#ff2244';
+    const y=c.hand==='k1'?bY1:bY2;
+    cx.shadowBlur=8;cx.shadowColor=color;
+    const g=cx.createLinearGradient(x,0,x+w,0);
+    g.addColorStop(0,color);g.addColorStop(1,color+'44');
+    cx.fillStyle=g;
+    cx.roundRect(x,y,w,bH,3);cx.fill();
+    cx.shadowBlur=0;
+  });
+  const stab=getStability();
+  if(stab!==null&&S.clicks.length>6){
+    const bandOp=(stab/100)*.12;
+    const bw=cX*(stab/100);
+    cx.fillStyle=`rgba(${isDark?'0,200,255':'0,102,204'},${bandOp})`;
+    cx.fillRect(cX-bw,H/2-2,bw*2,4);
+  }
+  if(S.active&&S.curDur>0){
+    const prog=Math.min(1,(performance.now()-S.startT)/S.curDur);
+    cx.fillStyle=acc+'22';cx.fillRect(0,0,W,3);
+    cx.fillStyle=acc;cx.fillRect(0,0,W*prog,2);
+  }
+  cx.strokeStyle=acc;cx.lineWidth=2;
+  cx.shadowBlur=18;cx.shadowColor=acc;
+  cx.beginPath();cx.moveTo(cX,0);cx.lineTo(cX,H);cx.stroke();
+  const ds=7;
+  cx.fillStyle=acc;
+  cx.beginPath();cx.moveTo(cX,H/2-ds);cx.lineTo(cX+ds,H/2);
+  cx.lineTo(cX,H/2+ds);cx.lineTo(cX-ds,H/2);cx.closePath();cx.fill();
+  cx.shadowBlur=0;
+}
+drawGraph();
+setInterval(()=>{if(S.active)update();},300);
+document.getElementById('mNormal').addEventListener('click',()=>{if(!S.active){S.mode='normal'; document.getElementById('mNormal').classList.add('active');document.getElementById('mRhythm').classList.remove('active');}});
+document.getElementById('mRhythm').addEventListener('click',()=>{if(!S.active){S.mode='line'; document.getElementById('mRhythm').classList.add('active');document.getElementById('mNormal').classList.remove('active');}});
+function setTheme(t){theme=t; document.documentElement.setAttribute('data-theme',t==='light'?'light':''); document.getElementById('themeBtn').textContent=t==='dark'?'🌙':'☀️'; document.getElementById('three-canvas').style.opacity=t==='dark'?'.55':'.2';}
+document.getElementById('themeBtn').addEventListener('click',()=>setTheme(theme==='dark'?'light':'dark'));
+function applyLang(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll('[data-t]').forEach(el=>{const v=T[lang][el.getAttribute('data-t')];if(v)el.textContent=v;});
+  const opts=document.getElementById('durSel').options;
+  for(let i=0;i<opts.length;i++)opts[i].textContent=T[lang].dur[i];
+  document.getElementById('boostPill').innerHTML='🔥 '+T[lang].boostTxt;
+  document.getElementById('langBtn').textContent=lang.toUpperCase();
+  if(!S.active){
+    document.getElementById('coachTxt').textContent=VERDICTS[lang].wait;
+    document.getElementById('tipsList').innerHTML=`<div class="tip">${T[lang].tipWait}</div>`;
+    document.getElementById('ginfo').textContent=T[lang].ginfo_wait;
+  }
+}
+document.getElementById('langBtn').addEventListener('click',()=>{lang=lang==='ru'?'en':'ru'; applyLang(); if(S.active)update();});
+(function initDur(){
+  const sel=document.getElementById('durSel');
+  [[5,'5'],[10,'10'],[30,'30'],[0,'0']].forEach(([v])=>{const o=document.createElement('option');o.value=v; if(v===10)o.selected=true; sel.appendChild(o);});
+})();
+window.addEventListener('resize',()=>{tRend.setSize(innerWidth,innerHeight); tCam.aspect=innerWidth/innerHeight; tCam.updateProjectionMatrix();});
+applyLang();
+setTheme('dark');
 </script>
 </body>
 </html>
